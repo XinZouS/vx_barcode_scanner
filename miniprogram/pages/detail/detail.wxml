@@ -1,0 +1,96 @@
+<view class="container">
+  <!-- 任务信息区域 -->
+  <view class="task-info-section">
+    <view class="task-header">
+      <text class="task-name">{{taskName}}</text>
+      <text class="task-total">总计: {{totalCount}}</text>
+    </view>
+    <view class="task-meta">
+      <text class="task-time">创建: {{startTimeStr}}</text>
+      <text class="task-update">更新: {{updateTimeStr}}</text>
+    </view>
+  </view>
+
+  <!-- 数据操作栏 -->
+  <view class="data-actions">
+    <view class="action-left">
+      <text class="data-count">共 {{dataList.length}} 种条码</text>
+    </view>
+    <view class="action-right">
+      <view class="action-btn export-btn" bindtap="onExportData">
+        <text>导出数据</text>
+      </view>
+      <view class="action-btn share-btn" bindtap="onShareData">
+        <text>分享</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 数据表格 -->
+  <view class="data-table">
+    <view class="table-header">
+      <text class="col-index">序号</text>
+      <text class="col-code">条码</text>
+      <text class="col-count">数量</text>
+      <text class="col-action">操作</text>
+    </view>
+    
+    <scroll-view class="table-body" scroll-y>
+      <view class="table-row" wx:for="{{dataList}}" wx:key="code">
+        <text class="col-index">{{index + 1}}</text>
+        <text class="col-code">{{item.code}}</text>
+        <text class="col-count">{{item.count}}</text>
+        <view class="col-action">
+          <view class="row-btn edit" bindtap="onEditCount" data-index="{{index}}">
+            <text>编辑</text>
+          </view>
+          <view class="row-btn delete" bindtap="onDeleteItem" data-index="{{index}}">
+            <text>删除</text>
+          </view>
+        </view>
+      </view>
+      
+      <view class="table-empty" wx:if="{{dataList.length === 0}}">
+        <text>暂无数据</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-actions">
+    <view class="bottom-btn continue-btn" bindtap="onContinueScan">
+      <text>继续扫码</text>
+    </view>
+    <view class="bottom-btn back-btn" bindtap="onGoBack">
+      <text>返回列表</text>
+    </view>
+  </view>
+</view>
+
+<!-- 编辑数量弹窗 -->
+<view class="modal-mask" wx:if="{{showEditModal}}">
+  <view class="modal-content">
+    <view class="modal-header">
+      <text class="modal-title">编辑数量</text>
+    </view>
+    <view class="modal-body">
+      <text class="modal-hint">条码: {{editItem.code}}</text>
+      <input 
+        class="count-input" 
+        type="number" 
+        placeholder="请输入数量" 
+        value="{{editCount}}"
+        bindinput="onEditCountInput"
+        focus="{{showEditModal}}"
+      />
+    </view>
+    <view class="modal-footer">
+      <view class="modal-btn cancel" bindtap="onCancelEdit">
+        <text>取消</text>
+      </view>
+      <view class="modal-btn confirm" bindtap="onConfirmEdit">
+        <text>确定</text>
+      </view>
+    </view>
+  </view>
+</view>

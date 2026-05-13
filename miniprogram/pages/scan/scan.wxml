@@ -1,0 +1,124 @@
+<view class="container">
+  <!-- 扫码区域 -->
+  <view class="scan-section">
+    <camera 
+      class="camera" 
+      mode="scanCode" 
+      bindscancode="onScanCode"
+      flash="off"
+      device-position="back"
+    ></camera>
+    
+    <!-- 扫码框 overlay -->
+    <view class="scan-overlay">
+      <view class="scan-frame">
+        <view class="corner top-left"></view>
+        <view class="corner top-right"></view>
+        <view class="corner bottom-left"></view>
+        <view class="corner bottom-right"></view>
+      </view>
+      <text class="scan-hint">将条码放入框内</text>
+    </view>
+
+    <!-- 未开始扫码时的巨大按钮覆盖层 -->
+    <view class="scan-pause-overlay" wx:if="{{!isScanning}}" bindtap="onToggleScan">
+      <view class="start-button">
+        <view class="start-icon">▶</view>
+        <text class="start-text">开始扫码</text>
+      </view>
+    </view>
+
+    <!-- 扫码状态指示 -->
+    <view class="scan-status" wx:if="{{isScanning}}">
+      <view class="status-indicator scanning"></view>
+      <text class="status-text">扫码中...</text>
+    </view>
+    <view class="scan-status" wx:elif="{{cooldown}}">
+      <view class="status-indicator cooldown"></view>
+      <text class="status-text">识别成功，即将继续...</text>
+    </view>
+    <view class="scan-status" wx:else>
+      <view class="status-indicator paused"></view>
+      <text class="status-text">已暂停</text>
+    </view>
+  </view>
+
+  <!-- 模式切换和控制 -->
+  <view class="control-section">
+    <view class="mode-switch">
+      <text class="mode-label">扫码模式:</text>
+      <view class="switch-container">
+        <view 
+          class="mode-option {{scanMode === 'single' ? 'active' : ''}}" 
+          bindtap="onModeChange" 
+          data-mode="single"
+        >
+          <text>单次扫码</text>
+        </view>
+        <view 
+          class="mode-option {{scanMode === 'continuous' ? 'active' : ''}}" 
+          bindtap="onModeChange" 
+          data-mode="continuous"
+        >
+          <text>连续扫码</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="control-buttons">
+      <view class="control-btn {{isScanning ? 'pause' : 'start'}}" bindtap="onToggleScan">
+        <text>{{isScanning ? '暂停' : '开始扫码'}}</text>
+      </view>
+      <view class="control-btn finish" bindtap="onFinishScan">
+        <text>完成</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 实时数据展示 -->
+  <view class="data-section">
+    <view class="data-header">
+      <text class="data-title">本次扫码数据</text>
+      <text class="data-count">共 {{scannedCount}} 条</text>
+    </view>
+    
+    <scroll-view class="data-list" scroll-y>
+      <view class="data-item" wx:for="{{scannedList}}" wx:key="code">
+        <text class="data-code">{{item.code}}</text>
+        <text class="data-count-value">x{{item.count}}</text>
+      </view>
+      
+      <view class="data-empty" wx:if="{{scannedList.length === 0}}">
+        <text>暂无扫码数据</text>
+      </view>
+    </scroll-view>
+  </view>
+</view>
+
+<!-- 单次扫码数量输入弹窗 -->
+<view class="modal-mask" wx:if="{{showCountModal}}">
+  <view class="modal-content">
+    <view class="modal-header">
+      <text class="modal-title">输入数量</text>
+    </view>
+    <view class="modal-body">
+      <text class="modal-hint">条码: {{currentCode}}</text>
+      <input 
+        class="count-input" 
+        type="number" 
+        placeholder="请输入数量" 
+        value="{{inputCount}}"
+        bindinput="onCountInput"
+        focus="{{showCountModal}}"
+      />
+    </view>
+    <view class="modal-footer">
+      <view class="modal-btn cancel" bindtap="onCancelCount">
+        <text>取消</text>
+      </view>
+      <view class="modal-btn confirm" bindtap="onConfirmCount">
+        <text>确定</text>
+      </view>
+    </view>
+  </view>
+</view>

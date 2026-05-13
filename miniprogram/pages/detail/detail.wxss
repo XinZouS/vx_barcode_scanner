@@ -1,0 +1,277 @@
+/* pages/detail/detail.wxss */
+
+.container {
+  min-height: 100vh;
+  background-color: #f0f9f0;
+  padding-bottom: 120rpx;
+}
+
+/* 任务信息区域 */
+.task-info-section {
+  background: linear-gradient(135deg, #5cb85c 0%, #4cae4c 100%);
+  padding: 40rpx 30rpx;
+  color: white;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15rpx;
+}
+
+.task-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  flex: 1;
+}
+
+.task-total {
+  font-size: 30rpx;
+  background-color: rgba(255, 255, 255, 0.3);
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+}
+
+.task-meta {
+  display: flex;
+  gap: 30rpx;
+}
+
+.task-time,
+.task-update {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+/* 数据操作栏 */
+.data-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+}
+
+.action-left {
+  flex: 1;
+}
+
+.data-count {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.action-right {
+  display: flex;
+  gap: 15rpx;
+}
+
+.action-btn {
+  padding: 12rpx 25rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+}
+
+.export-btn {
+  background-color: #5cb85c;
+  color: white;
+}
+
+.share-btn {
+  background-color: #e8f5e8;
+  color: #5cb85c;
+}
+
+/* 数据表格 */
+.data-table {
+  margin: 0 30rpx;
+  background-color: white;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.table-header {
+  display: flex;
+  background-color: #f0f9f0;
+  padding: 20rpx 15rpx;
+  font-weight: bold;
+  color: #333;
+  font-size: 26rpx;
+}
+
+.col-index {
+  width: 80rpx;
+  text-align: center;
+}
+
+.col-code {
+  flex: 1;
+  padding: 0 15rpx;
+}
+
+.col-count {
+  width: 120rpx;
+  text-align: center;
+}
+
+.col-action {
+  width: 180rpx;
+  text-align: center;
+}
+
+.table-body {
+  height: 600rpx;
+}
+
+.table-row {
+  display: flex;
+  padding: 20rpx 15rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  align-items: center;
+  font-size: 26rpx;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.col-action {
+  display: flex;
+  gap: 10rpx;
+  justify-content: center;
+}
+
+.row-btn {
+  padding: 8rpx 15rpx;
+  border-radius: 6rpx;
+  font-size: 22rpx;
+}
+
+.row-btn.edit {
+  background-color: #e8f5e8;
+  color: #5cb85c;
+}
+
+.row-btn.delete {
+  background-color: #fff0f0;
+  color: #FA5151;
+}
+
+.table-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200rpx;
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 底部操作栏 */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx 30rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: white;
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.bottom-btn {
+  flex: 1;
+  text-align: center;
+  padding: 25rpx 0;
+  border-radius: 50rpx;
+  font-size: 30rpx;
+  font-weight: bold;
+}
+
+.continue-btn {
+  background: linear-gradient(135deg, #5cb85c 0%, #4cae4c 100%);
+  color: white;
+  box-shadow: 0 4rpx 12rpx rgba(92, 184, 92, 0.3);
+}
+
+.back-btn {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+/* 弹窗样式 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  width: 80%;
+  background-color: white;
+  border-radius: 20rpx;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 30rpx;
+  background-color: #5CDB00;
+  text-align: center;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: white;
+}
+
+.modal-body {
+  padding: 40rpx 30rpx;
+}
+
+.modal-hint {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 20rpx;
+  text-align: center;
+}
+
+.count-input {
+  border: 2rpx solid #5CDB00;
+  border-radius: 10rpx;
+  padding: 20rpx;
+  font-size: 32rpx;
+  text-align: center;
+}
+
+.modal-footer {
+  display: flex;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.modal-btn {
+  flex: 1;
+  text-align: center;
+  padding: 25rpx 0;
+  font-size: 30rpx;
+}
+
+.modal-btn.cancel {
+  color: #999;
+  border-right: 1rpx solid #f0f0f0;
+}
+
+.modal-btn.confirm {
+  color: #5CDB00;
+  font-weight: bold;
+}

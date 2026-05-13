@@ -1,0 +1,76 @@
+<view class="container">
+  <!-- 顶部标题区域 -->
+  <view class="header">
+    <view class="title">条码扫码计数工具</view>
+    <view class="subtitle">高效便捷的条码计数解决方案</view>
+  </view>
+
+  <!-- 任务列表 -->
+  <view class="task-section">
+    <view class="section-header">
+      <text class="section-title">我的任务</text>
+      <text class="task-count" wx:if="{{taskList.length > 0}}">共 {{taskList.length}} 个任务</text>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{taskList.length === 0}}">
+      <view class="empty-icon">
+        <view class="scan-icon">
+          <view class="scan-frame-icon">
+            <view class="scan-line"></view>
+          </view>
+        </view>
+      </view>
+      <text class="empty-text">暂无任务</text>
+      <text class="empty-hint">点击下方按钮创建新任务</text>
+    </view>
+
+    <!-- 任务列表 -->
+    <view class="task-list" wx:else>
+      <view class="task-item" wx:for="{{taskList}}" wx:key="id">
+        <view class="task-info" bindtap="onTaskTap" data-task="{{item}}">
+          <view class="task-header">
+            <text class="task-name" wx:if="{{!item.isEditing}}">{{item.name}}</text>
+            <input 
+              class="task-name-input" 
+              wx:else 
+              value="{{item.editName}}" 
+              bindinput="onNameInput" 
+              bindblur="onNameBlur" 
+              data-index="{{index}}"
+              focus="{{item.isEditing}}"
+            />
+            <text class="task-total">总计: {{item.totalCount}}</text>
+          </view>
+          <view class="task-meta">
+            <text class="task-time">创建: {{item.startTimeStr}}</text>
+            <text class="task-update">更新: {{item.updateTimeStr}}</text>
+          </view>
+          <view class="task-preview">
+            <text class="preview-text">已扫码 {{item.codeCount}} 种条码</text>
+          </view>
+        </view>
+        
+        <view class="task-actions">
+          <view class="action-btn scan-btn" bindtap="onContinueScan" data-task="{{item}}">
+            <text>继续扫码</text>
+          </view>
+          <view class="action-btn detail-btn" bindtap="onViewDetail" data-task="{{item}}">
+            <text>查看详情</text>
+          </view>
+          <view class="action-btn delete-btn" bindtap="onDeleteTask" data-task="{{item}}">
+            <text>删除</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <view class="new-task-btn" bindtap="onNewTask">
+      <text class="btn-icon">+</text>
+      <text class="btn-text">新建任务</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,16 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/scan/scan",
+    "pages/detail/detail"
+  ],
+  "window": {
+    "backgroundColor": "#f0f9f0",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#5cb85c",
+    "navigationBarTitleText": "条码扫码计数",
+    "navigationBarTextStyle": "white"
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2"
+}

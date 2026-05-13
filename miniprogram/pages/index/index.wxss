@@ -1,0 +1,246 @@
+/* pages/index/index.wxss */
+
+.container {
+  min-height: 100vh;
+  background-color: #f0f9f0;
+  padding-bottom: 120rpx;
+}
+
+/* 顶部标题区域 */
+.header {
+  background: linear-gradient(135deg, #5cb85c 0%, #4cae4c 100%);
+  padding: 40rpx 30rpx;
+  color: white;
+}
+
+.title {
+  font-size: 44rpx;
+  font-weight: bold;
+  margin-bottom: 10rpx;
+}
+
+.subtitle {
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+
+/* 任务区域 */
+.task-section {
+  padding: 30rpx;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.task-count {
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.empty-icon {
+  width: 200rpx;
+  height: 200rpx;
+  background-color: #e8f5e8;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30rpx;
+}
+
+.scan-icon {
+  width: 120rpx;
+  height: 120rpx;
+  position: relative;
+}
+
+.scan-frame-icon {
+  width: 100rpx;
+  height: 100rpx;
+  border: 4rpx solid #5cb85c;
+  border-radius: 10rpx;
+  position: absolute;
+  top: 10rpx;
+  left: 10rpx;
+}
+
+.scan-line {
+  width: 80rpx;
+  height: 4rpx;
+  background-color: #5cb85c;
+  position: absolute;
+  top: 50rpx;
+  left: 20rpx;
+  animation: scanMove 2s infinite;
+}
+
+@keyframes scanMove {
+  0%, 100% {
+    top: 20rpx;
+  }
+  50% {
+    top: 80rpx;
+  }
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #999;
+  margin-bottom: 10rpx;
+}
+
+.empty-hint {
+  font-size: 26rpx;
+  color: #bbb;
+}
+
+/* 任务列表 */
+.task-list {
+  margin-top: 10rpx;
+}
+
+.task-item {
+  background: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.task-info {
+  margin-bottom: 20rpx;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15rpx;
+}
+
+.task-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+}
+
+.task-name-input {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+  border-bottom: 2rpx solid #5cb85c;
+  padding: 5rpx 0;
+}
+
+.task-total {
+  font-size: 28rpx;
+  color: #5cb85c;
+  font-weight: bold;
+}
+
+.task-meta {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 10rpx;
+}
+
+.task-time,
+.task-update {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.task-preview {
+  margin-top: 10rpx;
+}
+
+.preview-text {
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* 任务操作按钮 */
+.task-actions {
+  display: flex;
+  gap: 15rpx;
+  border-top: 1rpx solid #f0f0f0;
+  padding-top: 20rpx;
+}
+
+.action-btn {
+  flex: 1;
+  text-align: center;
+  padding: 15rpx 0;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+}
+
+.scan-btn {
+  background-color: #5cb85c;
+  color: white;
+}
+
+.detail-btn {
+  background-color: #e8f5e8;
+  color: #5cb85c;
+}
+
+.delete-btn {
+  background-color: #fff0f0;
+  color: #ff6b6b;
+}
+
+/* 底部操作栏 */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20rpx 30rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: white;
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.new-task-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #5cb85c 0%, #4cae4c 100%);
+  color: white;
+  padding: 25rpx 0;
+  border-radius: 50rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  box-shadow: 0 4rpx 12rpx rgba(92, 184, 92, 0.3);
+}
+
+.btn-icon {
+  font-size: 40rpx;
+  margin-right: 10rpx;
+}
+
+.btn-text {
+  font-size: 32rpx;
+}

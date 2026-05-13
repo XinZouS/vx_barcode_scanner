@@ -1,0 +1,402 @@
+/* pages/scan/scan.wxss */
+
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f0f9f0;
+}
+
+/* 扫码区域 */
+.scan-section {
+  position: relative;
+  width: 100%;
+  height: 55vh;
+  background-color: #000;
+  overflow: hidden;
+}
+
+.camera {
+  width: 100%;
+  height: 100%;
+}
+
+/* 扫码框 overlay */
+.scan-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.scan-frame {
+  width: 500rpx;
+  height: 500rpx;
+  position: relative;
+  border: 2rpx solid rgba(92, 184, 92, 0.5);
+}
+
+.corner {
+  position: absolute;
+  width: 40rpx;
+  height: 40rpx;
+  border-color: #5cb85c;
+  border-style: solid;
+  border-width: 0;
+}
+
+.corner.top-left {
+  top: -4rpx;
+  left: -4rpx;
+  border-top-width: 8rpx;
+  border-left-width: 8rpx;
+}
+
+.corner.top-right {
+  top: -4rpx;
+  right: -4rpx;
+  border-top-width: 8rpx;
+  border-right-width: 8rpx;
+}
+
+.corner.bottom-left {
+  bottom: -4rpx;
+  left: -4rpx;
+  border-bottom-width: 8rpx;
+  border-left-width: 8rpx;
+}
+
+.corner.bottom-right {
+  bottom: -4rpx;
+  right: -4rpx;
+  border-bottom-width: 8rpx;
+  border-right-width: 8rpx;
+}
+
+.scan-hint {
+  margin-top: 30rpx;
+  color: white;
+  font-size: 28rpx;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 10rpx 30rpx;
+  border-radius: 30rpx;
+}
+
+/* 暂停时的巨大开始按钮覆盖层 */
+.scan-pause-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+.start-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 300rpx;
+  height: 300rpx;
+  border-radius: 50%;
+  background-color: rgba(92, 184, 92, 0.9);
+  box-shadow: 0 8rpx 30rpx rgba(92, 184, 92, 0.4);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.start-icon {
+  font-size: 80rpx;
+  color: white;
+  margin-bottom: 10rpx;
+}
+
+.start-text {
+  font-size: 32rpx;
+  color: white;
+  font-weight: bold;
+}
+
+/* 扫码状态指示 */
+.scan-status {
+  position: absolute;
+  top: 20rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 10rpx 30rpx;
+  border-radius: 30rpx;
+}
+
+.status-indicator {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  margin-right: 15rpx;
+}
+
+.status-indicator.scanning {
+  background-color: #5cb85c;
+  animation: blink 1.5s infinite;
+}
+
+.status-indicator.cooldown {
+  background-color: #ffa500;
+  animation: blink 1s infinite;
+}
+
+.status-indicator.paused {
+  background-color: #999;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-text {
+  color: white;
+  font-size: 24rpx;
+}
+
+/* 控制区域 */
+.control-section {
+  padding: 30rpx;
+  background-color: white;
+  border-radius: 30rpx 30rpx 0 0;
+  margin-top: -30rpx;
+  position: relative;
+  z-index: 10;
+}
+
+.mode-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30rpx;
+}
+
+.mode-label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.switch-container {
+  display: flex;
+  background-color: #f0f9f0;
+  border-radius: 50rpx;
+  padding: 5rpx;
+}
+
+.mode-option {
+  padding: 15rpx 30rpx;
+  border-radius: 50rpx;
+  font-size: 26rpx;
+  color: #666;
+  transition: all 0.3s;
+}
+
+.mode-option.active {
+  background-color: #5cb85c;
+  color: white;
+  font-weight: bold;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 20rpx;
+}
+
+.control-btn {
+  flex: 1;
+  text-align: center;
+  padding: 25rpx 0;
+  border-radius: 50rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.control-btn.start {
+  background: linear-gradient(135deg, #5cb85c 0%, #4cae4c 100%);
+  color: white;
+  box-shadow: 0 4rpx 12rpx rgba(92, 184, 92, 0.3);
+}
+
+.control-btn.pause {
+  background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+  color: white;
+  box-shadow: 0 4rpx 12rpx rgba(255, 165, 0, 0.3);
+}
+
+.control-btn.finish {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+/* 数据展示区域 */
+.data-section {
+  flex: 1;
+  padding: 30rpx;
+  overflow: hidden;
+}
+
+.data-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.data-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.data-count {
+  font-size: 26rpx;
+  color: #5cb85c;
+  font-weight: bold;
+}
+
+.data-list {
+  height: calc(100% - 60rpx);
+  background-color: white;
+  border-radius: 16rpx;
+  padding: 20rpx;
+}
+
+.data-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.data-item:last-child {
+  border-bottom: none;
+}
+
+.data-code {
+  font-size: 28rpx;
+  color: #333;
+  font-family: monospace;
+}
+
+.data-count-value {
+  font-size: 28rpx;
+  color: #5cb85c;
+  font-weight: bold;
+}
+
+.data-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200rpx;
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 弹窗样式 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  width: 80%;
+  background-color: white;
+  border-radius: 20rpx;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 30rpx;
+  background-color: #5cb85c;
+  text-align: center;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: white;
+}
+
+.modal-body {
+  padding: 40rpx 30rpx;
+}
+
+.modal-hint {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 20rpx;
+  text-align: center;
+}
+
+.count-input {
+  border: 2rpx solid #5cb85c;
+  border-radius: 10rpx;
+  padding: 20rpx;
+  font-size: 32rpx;
+  text-align: center;
+}
+
+.modal-footer {
+  display: flex;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.modal-btn {
+  flex: 1;
+  text-align: center;
+  padding: 25rpx 0;
+  font-size: 30rpx;
+}
+
+.modal-btn.cancel {
+  color: #999;
+  border-right: 1rpx solid #f0f0f0;
+}
+
+.modal-btn.confirm {
+  color: #5cb85c;
+  font-weight: bold;
+}

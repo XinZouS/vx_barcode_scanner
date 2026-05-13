@@ -1,0 +1,70 @@
+# ===== 微信开发者工具 - 项目配置 =====
+# 项目私有配置文件（含本地路径、AppID 等敏感信息）
+project.private.config.json
+
+# 本地编译缓存
+node_modules/
+miniprogram_npm/
+
+# 微信开发者工具临时文件
+.editorconfig
+.vscode/
+.idea/
+
+# ===== 编译产物 =====
+# 小程序编译后的临时文件
+miniprogram/_site/
+dist/
+build/
+
+# ===== 日志与调试 =====
+# 开发日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== 系统文件 =====
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ===== 环境 & 密钥 =====
+# 环境变量文件（如本地配置）
+.env
+.env.local
+.env.development
+.env.production
+
+# 密钥/证书文件
+*.pem
+*.key
+*.p12
+*.pfx
+
+# ===== 可选：依赖锁文件 =====
+# 如需跨环境锁定依赖，可取消注释
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ===== 可选：构建产物 =====
+# 如有 CI/CD 构建输出，按需添加
+# coverage/
+# .nyc_output/
+
+# ===== 临时/个人文件 =====
+# 个人笔记、草稿等
+*.tmp
+*.bak
+*.swp
+*.swo
