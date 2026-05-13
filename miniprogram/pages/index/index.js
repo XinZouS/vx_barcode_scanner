@@ -1,17 +1,94 @@
 const storageUtil = require('../../utils/storage')
+const userManager = require('../../utils/user')
 
 Page({
   data: {
-    taskList: []
+    taskList: [],
+    isLoggedIn: false,
+    username: '',
+    showUserMenu: false
   },
 
   onLoad() {
     this.loadTaskList()
+    this.checkLoginStatus()
   },
 
   onShow() {
-    // 每次显示页面时重新加载任务列表
+    // 每次显示页面时重新加载任务列表和登录状态
     this.loadTaskList()
+    this.checkLoginStatus()
+  },
+
+  /**
+   * 检查登录状态
+   */
+  checkLoginStatus() {
+    const isLoggedIn = userManager.checkLogin()
+    const userInfo = userManager.getUserInfo()
+
+    this.setData({
+      isLoggedIn,
+      // 优先显示 user_display_name，如果没有则显示 username
+      username: userInfo ? userInfo.user_display_name || userInfo.username || '用户' : ''
+    })
+  },
+
+  /**
+   * 跳转到登录页
+   */
+  goLogin() {
+    wx.navigateTo({
+      url: '/pages/login/login'
+    })
+  },
+
+  /**
+   * 显示用户菜单
+   */
+  showUserMenu() {
+    this.setData({ showUserMenu: true })
+  },
+
+  /**
+   * 隐藏用户菜单
+   */
+  hideUserMenu() {
+    this.setData({ showUserMenu: false })
+  },
+
+  /**
+   * 阻止事件冒泡
+   */
+  stopPropagation() {
+    // 空函数，用于阻止事件冒泡
+  },
+
+  /**
+   * 退出登录
+   */
+  doLogout() {
+    wx.showModal({
+      title: '提示',
+      content: '确定要退出登录吗？',
+      confirmColor: '#FA5151',
+      success: (res) => {
+        if (res.confirm) {
+          userManager.logout()
+          this.setData({
+            isLoggedIn: false,
+            username: '',
+            showUserMenu: false
+          })
+
+          wx.showToast({
+            title: '已退出登录',
+            icon: 'success',
+            duration: 1500
+          })
+        }
+      }
+    })
   },
 
   /**

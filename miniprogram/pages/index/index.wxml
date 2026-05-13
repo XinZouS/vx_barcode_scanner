@@ -1,10 +1,38 @@
 <view class="container">
   <!-- 顶部标题区域 -->
   <view class="header">
-    <view class="title">条码扫码计数工具</view>
-    <view class="subtitle">高效便捷的条码计数解决方案</view>
+    <view class="header-top">
+      <view class="title-wrapper">
+        <view class="title">条码扫码计数工具</view>
+        <view class="subtitle">高效便捷的条码计数解决方案</view>
+      </view>
+      
+      <!-- 用户区域（右上角） -->
+      <view class="user-area">
+        <!-- 未登录 -->
+        <view class="login-btn-small" wx:if="{{!isLoggedIn}}" bindtap="goLogin">
+          <text class="login-text">登录</text>
+        </view>
+        
+        <!-- 已登录 -->
+        <view class="user-info-wrapper" wx:else>
+          <view class="user-info" bindtap="showUserMenu">
+            <view class="user-avatar">
+              <text class="avatar-text">{{username[0]}}</text>
+            </view>
+            <text class="username">{{username}}</text>
+          </view>
+          
+          <!-- 用户菜单（紧贴用户名下方） -->
+          <view class="user-menu" wx:if="{{showUserMenu}}">
+            <view class="menu-item" bindtap="doLogout">
+              <text class="menu-item-text">退出登录</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
-
   <!-- 任务列表 -->
   <view class="task-section">
     <view class="section-header">

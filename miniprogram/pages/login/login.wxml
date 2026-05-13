@@ -1,0 +1,68 @@
+<!--pages/login/login.wxml-->
+<view class="container">
+  <!-- 登录表单卡片 -->
+  <view class="login-card">
+    <!-- 表单标题 -->
+    <view class="form-header">
+      <text class="form-title">用户登录</text>
+    </view>
+
+    <!-- 用户名输入 -->
+    <view class="input-group">
+      <text class="input-label">用户名</text>
+      <input
+        class="input-field {{usernameError ? 'input-error' : ''}}"
+        type="text"
+        placeholder="请输入用户名"
+        value="{{username}}"
+        bindinput="onUsernameInput"
+        bindconfirm="focusPassword"
+        focus="{{usernameFocus}}"
+      />
+      <text class="error-text" wx:if="{{usernameError}}">{{usernameError}}</text>
+    </view>
+
+    <!-- 密码输入 -->
+    <view class="input-group">
+      <text class="input-label">密码</text>
+      <view class="password-wrapper">
+        <input
+          class="input-field {{passwordError ? 'input-error' : ''}}"
+          password="{{!showPassword}}"
+          placeholder="请输入密码"
+          value="{{password}}"
+          bindinput="onPasswordInput"
+          bindconfirm="doLogin"
+          focus="{{passwordFocus}}"
+        />
+        <view class="toggle-pwd" bindtap="togglePasswordVisibility">
+          <view class="eye-icon {{showPassword ? 'eye-open' : 'eye-closed'}}">
+            <view class="eye-ball"></view>
+            <view class="eye-lid"></view>
+          </view>
+        </view>
+      </view>
+      <text class="error-text" wx:if="{{passwordError}}">{{passwordError}}</text>
+    </view>
+
+    <!-- 记住登录 -->
+    <view class="remember-row">
+      <view class="checkbox-wrapper" bindtap="toggleRemember">
+        <view class="checkbox {{rememberMe ? 'checked' : ''}}">
+          <text wx:if="{{rememberMe}}" class="check-mark">✓</text>
+        </view>
+      </view>
+      <text class="remember-text">记住登录</text>
+    </view>
+
+    <!-- 登录按钮 -->
+    <button
+      class="login-btn"
+      bindtap="doLogin"
+      loading="{{loading}}"
+      disabled="{{loading}}"
+    >
+      {{loading ? '登录中...' : '登录'}}
+    </button>
+  </view>
+</view>

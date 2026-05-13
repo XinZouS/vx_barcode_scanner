@@ -1,0 +1,222 @@
+/* pages/login/login.wxss */
+
+.container {
+  min-height: 100vh;
+  background-color: #f0f9f0;
+  display: flex;
+  align-items: flex-start;  /* 靠上对齐 */
+  justify-content: center;
+  padding: 80rpx 40rpx 40rpx;  /* 顶部留出空间，让卡片靠上 */
+  box-sizing: border-box;
+}
+
+/* 登录卡片 */
+.login-card {
+  width: 100%;
+  max-width: 650rpx;
+  background: white;
+  border-radius: 24rpx;
+  padding: 60rpx 50rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+}
+
+/* 表单标题 */
+.form-header {
+  text-align: center;
+  margin-bottom: 60rpx;
+}
+
+.form-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 输入组 */
+.input-group {
+  margin-bottom: 36rpx;
+}
+
+.input-label {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.input-field {
+  width: 100%;
+  height: 88rpx;
+  background: #f8fafc;
+  border: 2rpx solid #e2e8f0;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 30rpx;
+  color: #2d3748;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.input-field:focus,
+.input-field.input-focus {
+  border-color: #5cb85c;
+  box-shadow: 0 0 0 4rpx rgba(92, 184, 92, 0.1);
+}
+
+.input-field.input-error {
+  border-color: #FA5151;
+}
+
+/* 密码输入容器 */
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper .input-field {
+  padding-right: 88rpx;
+}
+
+/* 眼睛图标按钮 */
+.toggle-pwd {
+  position: absolute;
+  right: 20rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 10rpx;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 眼睛图标 - CSS绘制 */
+.eye-icon {
+  width: 44rpx;
+  height: 28rpx;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 眼睛轮廓 */
+.eye-icon::before {
+  content: '';
+  width: 44rpx;
+  height: 28rpx;
+  border: 3rpx solid #999;
+  border-radius: 50%;
+  position: absolute;
+  transition: all 0.3s ease;
+}
+
+/* 眼珠 */
+.eye-ball {
+  width: 16rpx;
+  height: 16rpx;
+  background: #999;
+  border-radius: 50%;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+/* 闭眼状态 - 眼珠消失 */
+.eye-closed .eye-ball {
+  opacity: 0;
+  transform: scale(0);
+}
+
+/* 闭眼状态 - 眼睛轮廓变直线 */
+.eye-closed::before {
+  height: 4rpx;
+  border-radius: 2rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  border-color: #999;
+}
+
+/* 激活状态 */
+.toggle-pwd:active .eye-icon::before {
+  border-color: #5cb85c;
+}
+
+.toggle-pwd:active .eye-ball {
+  background: #5cb85c;
+}
+
+/* 错误提示 */
+.error-text {
+  display: block;
+  font-size: 24rpx;
+  color: #FA5151;
+  margin-top: 8rpx;
+  padding-left: 8rpx;
+}
+
+/* 记住登录 */
+.remember-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 48rpx;
+  padding: 0 4rpx;
+}
+
+.checkbox-wrapper {
+  padding: 8rpx;
+  margin-right: 12rpx;
+}
+
+.checkbox {
+  width: 36rpx;
+  height: 36rpx;
+  border: 2rpx solid #d9d9d9;
+  border-radius: 6rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.checkbox.checked {
+  background: #5cb85c;
+  border-color: #5cb85c;
+}
+
+.check-mark {
+  color: white;
+  font-size: 24rpx;
+  font-weight: bold;
+}
+
+.remember-text {
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 登录按钮 */
+.login-btn {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #5cb85c 0%, #4cae4c 100%);
+  color: white;
+  font-size: 32rpx;
+  font-weight: bold;
+  border-radius: 50rpx;
+  border: none;
+  box-shadow: 0 4rpx 12rpx rgba(92, 184, 92, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.login-btn::after {
+  border: none;
+}
+
+.login-btn[disabled] {
+  opacity: 0.6;
+  box-shadow: none;
+}
