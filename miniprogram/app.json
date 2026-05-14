@@ -3,7 +3,8 @@
     "pages/index/index",
     "pages/login/login",
     "pages/scan/scan",
-    "pages/detail/detail"
+    "pages/detail/detail",
+    "pages/stock-check/stock-check"
   ],
   "window": {
     "backgroundColor": "#f0f9f0",
@@ -13,5 +14,6 @@
     "navigationBarTextStyle": "white"
   },
   "sitemapLocation": "sitemap.json",
-  "style": "v2"
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
 }

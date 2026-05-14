@@ -260,6 +260,15 @@
   color: #666;
 }
 
+.control-btn.cancel {
+  background-color: #e0e0e0;
+  color: #666;
+}
+
+.control-btn.cancel:active {
+  background-color: #ccc;
+}
+
 /* 数据展示区域 */
 .data-section {
   flex: 1;

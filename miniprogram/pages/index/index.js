@@ -44,6 +44,16 @@ Page({
   },
 
   /**
+   * 跳转到统计条目页面
+   */
+  goStockCheck() {
+    wx.navigateTo({
+      url: '/pages/stock-check/stock-check'
+    })
+    this.setData({ showUserMenu: false })
+  },
+
+  /**
    * 显示用户菜单
    */
   showUserMenu() {

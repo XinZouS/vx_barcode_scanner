@@ -68,3 +68,8 @@ Desktop.ini
 *.bak
 *.swp
 *.swo
+
+# ===== WorkBuddy 内存文件 =====
+# 不跟踪内存/工作记忆文件（含个人笔记、会话记忆）
+.workbuddy/memory/*
+.workbuddy/memory/

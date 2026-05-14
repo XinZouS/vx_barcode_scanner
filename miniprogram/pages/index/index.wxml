@@ -23,12 +23,15 @@
             <text class="username">{{username}}</text>
           </view>
           
-          <!-- 用户菜单（紧贴用户名下方） -->
-          <view class="user-menu" wx:if="{{showUserMenu}}">
-            <view class="menu-item" bindtap="doLogout">
-              <text class="menu-item-text">退出登录</text>
-            </view>
+        <!-- 用户菜单（紧贴用户名下方） -->
+        <view class="user-menu" wx:if="{{showUserMenu}}">
+          <view class="menu-item" bindtap="goStockCheck">
+            <text class="menu-item-text normal">统计条目</text>
           </view>
+          <view class="menu-item" bindtap="doLogout">
+            <text class="menu-item-text danger">退出登录</text>
+          </view>
+        </view>
         </view>
       </view>
     </view>

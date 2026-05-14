@@ -126,6 +126,13 @@
 
 .menu-item-text {
   font-size: 28rpx;
+}
+
+.menu-item-text.normal {
+  color: #333;
+}
+
+.menu-item-text.danger {
   color: #FA5151;
 }
 

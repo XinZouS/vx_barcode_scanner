@@ -27,7 +27,7 @@
         <text class="start-text">开始扫码</text>
       </view>
     </view>
-
+    
     <!-- 扫码状态指示 -->
     <view class="scan-status" wx:if="{{isScanning}}">
       <view class="status-indicator scanning"></view>
@@ -45,7 +45,7 @@
 
   <!-- 模式切换和控制 -->
   <view class="control-section">
-    <view class="mode-switch">
+    <view class="mode-switch" wx:if="{{mode !== 'return'}}">
       <text class="mode-label">扫码模式:</text>
       <view class="switch-container">
         <view 
@@ -69,14 +69,17 @@
       <view class="control-btn {{isScanning ? 'pause' : 'start'}}" bindtap="onToggleScan">
         <text>{{isScanning ? '暂停' : '开始扫码'}}</text>
       </view>
-      <view class="control-btn finish" bindtap="onFinishScan">
+      <view class="control-btn cancel" bindtap="onCancelScan" wx:if="{{mode === 'return'}}">
+        <text>取消</text>
+      </view>
+      <view class="control-btn finish" bindtap="onFinishScan" wx:if="{{mode !== 'return'}}">
         <text>完成</text>
       </view>
     </view>
   </view>
 
-  <!-- 实时数据展示 -->
-  <view class="data-section">
+  <!-- 实时数据展示（仅非 return 模式显示） -->
+  <view class="data-section" wx:if="{{mode !== 'return'}}">
     <view class="data-header">
       <text class="data-title">本次扫码数据</text>
       <text class="data-count">共 {{scannedCount}} 条</text>
@@ -92,6 +95,11 @@
         <text>暂无扫码数据</text>
       </view>
     </scroll-view>
+  </view>
+
+  <!-- return 模式下的提示 -->
+  <view class="return-hint" wx:if="{{mode === 'return'}}">
+    <text class="return-text">扫码成功后自动返回</text>
   </view>
 </view>
 

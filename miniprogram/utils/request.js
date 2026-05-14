@@ -5,7 +5,7 @@
  *
  * 使用方式：
  * const request = require('../../utils/request');
- * request.get('/api/endpoint').then(res => {}).catch(err => {});
+ * request.get('/api/endpoint', params).then(res => {}).catch(err => {});
  * request.post('/api/endpoint', data).then(res => {});
  */
 

@@ -15,27 +15,32 @@ Page({
     lastScanTime: 0,
     cooldownTime: 1000,  // 1秒冷却时间
     // 反馈设置
-    vibrateEnabled: true  // 震动反馈
+    vibrateEnabled: true,  // 震动反馈
+    mode: 'normal'  // 'normal' 或 'return'（返回结果模式）
   },
 
   onLoad(options) {
-    const { taskId } = options
+    const { taskId, mode } = options
     
-    if (!taskId) {
-      wx.showToast({
-        title: '任务ID缺失',
-        icon: 'none'
-      })
-      setTimeout(() => {
-        wx.navigateBack()
-      }, 1500)
-      return
+    // 设置模式
+    if (mode === 'return') {
+      this.setData({ mode: 'return', taskId: 'temp_' + Date.now() })
+    } else {
+      if (!taskId) {
+        wx.showToast({
+          title: '任务ID缺失',
+          icon: 'none'
+        })
+        setTimeout(() => {
+          wx.navigateBack()
+        }, 1500)
+        return
+      }
+      this.setData({ taskId })
     }
     
-    this.setData({ taskId })
-    
     // 获取任务信息
-    const task = storageUtil.getTaskById(taskId)
+    const task = storageUtil.getTaskById(this.data.taskId)
     if (task) {
       this.setData({ taskName: task.name })
       
@@ -127,7 +132,7 @@ Page({
    * 扫码成功回调（camera组件scan-code模式）
    */
   onScanCode(e) {
-    const { isScanning, cooldown, taskId } = this.data
+    const { isScanning, cooldown, taskId, mode } = this.data
     
     // 如果不在扫码状态或正在冷却，忽略
     if (!isScanning || cooldown) {
@@ -148,7 +153,29 @@ Page({
     
     this.setData({ lastScanTime: now })
     
-    // 根据模式处理
+    // 如果是 return 模式，直接返回结果并关闭页面
+    if (mode === 'return') {
+      const pages = getCurrentPages()
+      const prevPage = pages[pages.length - 2]  // 上一个页面
+      
+      if (prevPage) {
+        // 调用上一个页面的回调，或者设置数据
+        if (prevPage.handleScanResult) {
+          prevPage.handleScanResult(code)
+        } else {
+          // 通过 eventChannel 传递数据
+          const eventChannel = this.getOpenerEventChannel()
+          if (eventChannel) {
+            eventChannel.emit('scanResult', { code })
+          }
+        }
+      }
+      
+      wx.navigateBack()
+      return
+    }
+    
+    // 根据模式处理（普通模式）
     if (this.data.scanMode === 'single') {
       // 单次模式：弹窗让用户输入数量
       this.setData({
@@ -274,5 +301,12 @@ Page({
         }
       }
     })
+  },
+
+  /**
+   * 取消扫码，直接返回
+   */
+  onCancelScan() {
+    wx.navigateBack()
   }
 })
