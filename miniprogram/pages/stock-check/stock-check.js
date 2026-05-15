@@ -34,6 +34,16 @@ Page({
     submitBtnText: '提交统计结果',
     isChecked: false,
 
+    // 货位相关
+    showAllocationDialog: false,
+    showCreateAllocationDialog: false,
+    allocationList: [],
+    filteredAllocations: [],
+    allocationSearchKey: '',
+    selectedAllocationId: null,
+    currentAllocationName: '',
+    newAllocationName: '',
+
   },
 
   onLoad() {
@@ -65,7 +75,6 @@ Page({
         progressWidth: percent + '%'
       })
     } catch (err) {
-      console.error('获取进度失败:', err)
       this.showError(err)
     }
   },
@@ -74,9 +83,9 @@ Page({
     const { progress, startLoading } = this.data
     if (startLoading) return
 
-        const confirmMsg = progress.is_in_progress
-          ? `当前有统计进行中（已统计 ${progress.checked} 条，待统计 ${progress.unchecked} 条）。\n重新开始将重置所有物品为"待统计"状态，确认吗？`
-          : '将把数量大于0的物品标记为待统计状态'
+    const confirmMsg = progress.is_in_progress
+      ? `当前有统计进行中（已统计 ${progress.checked} 条，待统计 ${progress.unchecked} 条）。\n重新开始将重置所有物品为"待统计"状态，确认吗？`
+      : '将把数量大于0的物品标记为待统计状态'
 
     wx.showModal({
       title: '开始统计',
@@ -94,7 +103,6 @@ Page({
             })
             await this.fetchProgress()
           } catch (err) {
-            console.error('开始统计失败:', err)
             this.showError(err)
           } finally {
             this.setData({ startLoading: false })
@@ -161,15 +169,9 @@ Page({
     this.setData({ searchLoading: true, searched: false })
 
     try {
-      console.log('开始搜索，参数：', {
-        key: searchKey
-      })
-      
       const data = await request.get('/stock/goods_search/', {
         key: searchKey
       })
-
-      console.log('搜索成功，返回数据：', data)
 
       if (!data || data.length === 0) {
         wx.showToast({ title: '未找到匹配的物品记录', icon: 'none' })
@@ -181,8 +183,6 @@ Page({
         this.setData({ searched: true, searchResults: data })
       }
     } catch (err) {
-      console.error('搜索失败:', err)
-      console.error('错误详情：', JSON.stringify(err))
       this.showError(err)
       this.setData({ searched: true, searchResults: [], currentItem: null })
     } finally {
@@ -197,11 +197,8 @@ Page({
     const item = itemOrEvent.currentTarget ? itemOrEvent.currentTarget.dataset.item : itemOrEvent
 
     if (!item) {
-      console.error('selectItem: item 为空', itemOrEvent)
       return
     }
-
-    console.log('选中物品：', item)
 
     const quantity = Number(item.quantity) || 0
     const isExpired = this.checkExpired(item.expire_date)
@@ -297,17 +294,10 @@ Page({
     wx.vibrateShort({ type: 'medium' })
 
     try {
-      console.log('提交统计，参数：', {
-        stock_goods_id: currentItem.id,
-        actual_qty: actualQty
-      })
-
       const result = await request.post('/stock/checking/submit/', {
         stock_goods_id: currentItem.id,
         actual_qty: actualQty
       })
-
-      console.log('提交成功，返回数据：', result)
 
       const delta = Number(result.delta || 0)
 
@@ -348,47 +338,212 @@ Page({
         searchKey: ''
       })
     } catch (err) {
-      console.error('提交失败:', err)
-      console.error('错误详情：', JSON.stringify(err))
       this.showError(err)
     } finally {
       this.setData({ submitLoading: false })
     }
   },
 
+  // ========== 货位相关方法 ==========
+  async fetchAllocations() {
+    try {
+      const data = await request.get('/goods/allocation/')
+      this.setData({
+        allocationList: data || [],
+        filteredAllocations: data || []
+      })
+    } catch (err) {
+      wx.showToast({ title: '获取货位列表失败', icon: 'none' })
+    }
+  },
+
+  openAllocationDialog() {
+    const { currentItem } = this.data
+    if (!currentItem) {
+      wx.showToast({ title: '请先选择物品', icon: 'none' })
+      return
+    }
+
+    // 获取货位列表
+    this.fetchAllocations()
+
+    // 如果当前物品已有货位，选中它
+    const selectedAllocationId = currentItem.allocation_id || null
+
+    this.setData({
+      showAllocationDialog: true,
+      selectedAllocationId,
+      allocationSearchKey: '',
+      filteredAllocations: this.data.allocationList
+    })
+  },
+
+  closeAllocationDialog() {
+    this.setData({
+      showAllocationDialog: false,
+      allocationSearchKey: '',
+      filteredAllocations: []
+    })
+  },
+
+  onAllocationSearchInput(e) {
+    const searchKey = e.detail.value.toLowerCase()
+    const { allocationList } = this.data
+
+    if (!searchKey) {
+      this.setData({
+        allocationSearchKey: e.detail.value,
+        filteredAllocations: allocationList
+      })
+      return
+    }
+
+    const filtered = allocationList.filter(item =>
+      item.name.toLowerCase().includes(searchKey)
+    )
+
+    this.setData({
+      allocationSearchKey: e.detail.value,
+      filteredAllocations: filtered
+    })
+  },
+
+  selectAllocation(e) {
+    const { id, name } = e.currentTarget.dataset
+    this.setData({ selectedAllocationId: id })
+  },
+
+  confirmAllocation() {
+    const { selectedAllocationId, filteredAllocations, currentItem } = this.data
+
+    if (!selectedAllocationId) {
+      wx.showToast({ title: '请选择货位', icon: 'none' })
+      return
+    }
+
+    const selectedAllocation = filteredAllocations.find(item => item.id === selectedAllocationId)
+    if (!selectedAllocation) {
+      wx.showToast({ title: '货位不存在', icon: 'none' })
+      return
+    }
+
+    // 更新当前物品的货位
+    this.setData({
+      currentAllocationName: selectedAllocation.name,
+      showAllocationDialog: false,
+      allocationSearchKey: '',
+      filteredAllocations: []
+    })
+
+    // 可选：如果需要保存到服务器，可以在这里调用API
+    // this.saveAllocationToServer(currentItem.id, selectedAllocationId)
+  },
+
+  openCreateAllocationDialog() {
+    this.setData({
+      showCreateAllocationDialog: true,
+      newAllocationName: ''
+    })
+  },
+
+  closeCreateAllocationDialog() {
+    this.setData({
+      showCreateAllocationDialog: false,
+      newAllocationName: ''
+    })
+  },
+
+  onNewAllocationInput(e) {
+    this.setData({ newAllocationName: e.detail.value })
+  },
+
+  async submitCreateAllocation() {
+    const { newAllocationName } = this.data
+
+    if (!newAllocationName.trim()) {
+      wx.showToast({ title: '请输入货位名称', icon: 'none' })
+      return
+    }
+
+    try {
+      const data = await request.post('/goods/allocation/', {
+        name: newAllocationName.trim()
+      })
+
+      wx.showToast({ title: '新增成功', icon: 'success' })
+
+      // 关闭新增弹窗
+      this.setData({
+        showCreateAllocationDialog: false,
+        newAllocationName: ''
+      })
+
+      // 刷新货位列表并自动选中新增的货位
+      await this.fetchAllocations()
+
+      // 自动选中新增的货位
+      this.setData({
+        selectedAllocationId: data.id,
+        currentAllocationName: data.name
+      })
+    } catch (err) {
+      this.showError(err)
+    }
+  },
+
+  preventBubble() {
+    // 阻止事件冒泡
+  },
+
   // ========== 错误提示 ==========
+  parseErrorDetail(detail) {
+    if (!detail) return '操作失败'
+    
+    // 如果是字符串，直接返回
+    if (typeof detail === 'string') return detail
+    
+    // 如果是对象，遍历所有键值对
+    if (typeof detail === 'object' && detail !== null) {
+      const errorMessages = []
+      
+      for (const key in detail) {
+        if (detail.hasOwnProperty(key)) {
+          const value = detail[key]
+          let valueStr = ''
+          
+          // 如果 value 是数组，拼接数组中的字符串
+          if (Array.isArray(value)) {
+            valueStr = value.join(' ')
+          } else if (typeof value === 'string') {
+            valueStr = value
+          } else {
+            valueStr = String(value)
+          }
+          
+          // 格式：key: value
+          errorMessages.push(`${key}: ${valueStr}`)
+        }
+      }
+      
+      // 如果有多个错误，用换行符分隔
+      return errorMessages.join('\n')
+    }
+    
+    return String(detail)
+  },
+
   showError(err) {
-    let message = '操作失败'
-    let detail = ''
-
-    // 打印详细错误信息到控制台
-    console.error('===== API 错误详情 =====')
-    console.error('错误对象：', err)
-    if (err.statusCode) {
-      console.error('HTTP 状态码：', err.statusCode)
-      detail += `HTTP ${err.statusCode}`
-    }
-    if (err.data) {
-      console.error('返回数据：', err.data)
-      detail += ' - ' + JSON.stringify(err.data)
-    }
-    if (err.raw) {
-      console.error('原始响应：', err.raw)
-    }
-    console.error('===== 结束 =====')
-
-    if (err.data && err.data.detail) {
-      message = err.data.detail
-    } else if (err.data && err.data.message) {
-      message = err.data.message
-    } else if (err.message) {
-      message = err.message
-    }
-
-    wx.showToast({
-      title: message,
-      icon: 'none',
-      duration: 3000
+    // 优先使用 err.message（已由 request.js 解析好）
+    let message = (err && err.message) || '操作失败'
+    
+    // 统一使用 showModal 显示错误，确保用户注意到
+    // 标题使用醒目的【错误】标识，确认按钮用红色
+    wx.showModal({
+      title: '【错误】',
+      content: message,
+      showCancel: false,
+      confirmText: '我知道了',
+      confirmColor: '#fa5151'  // 红色确认按钮
     })
   }
 })

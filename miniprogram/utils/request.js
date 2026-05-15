@@ -20,15 +20,70 @@ const BASE_URL = 'https://boheyuan.cn/api';  // ← 生产域名
 // ============================================================
 
 /**
- * 显示错误提示
- * @param {string} msg - 错误信息
+ * 解析错误详情，将对象格式转换为可读字符串
+ * @param {Object|string} detail - 错误详情
+ * @returns {string} 格式化后的错误信息
+ */
+function parseErrorDetail(detail) {
+  if (!detail) return '请求失败';
+  
+  // 如果是字符串，直接返回
+  if (typeof detail === 'string') return detail;
+  
+  // 如果是对象，遍历所有键值对
+  if (typeof detail === 'object' && detail !== null) {
+    const errorMessages = [];
+    
+    for (const key in detail) {
+      if (detail.hasOwnProperty(key)) {
+        const value = detail[key];
+        let valueStr = '';
+        
+        // 如果 value 是数组，拼接数组中的字符串
+        if (Array.isArray(value)) {
+          valueStr = value.join(' ');
+        } else if (typeof value === 'string') {
+          valueStr = value;
+        } else {
+          valueStr = String(value);
+        }
+        
+        // 格式：key: value
+        errorMessages.push(`${key}: ${valueStr}`);
+      }
+    }
+    
+    // 如果有多个错误，用换行符分隔
+    return errorMessages.join('\n');
+  }
+  
+  return String(detail);
+}
+
+/**
+ * 显示错误提示（支持多行，带明显错误标识）
+ * @param {string} msg - 错误信息（可包含换行符）
  */
 function showError(msg) {
-  wx.showToast({
-    title: msg,
-    icon: 'none',
-    duration: 2500
-  });
+  const errorMsg = msg || '操作失败';
+  
+  // 如果错误信息包含换行符，使用 showModal 显示
+  if (errorMsg.includes('\n') || errorMsg.length > 20) {
+    wx.showModal({
+      title: '❌ 错误',
+      content: errorMsg,
+      showCancel: false,
+      confirmText: '确定'
+    });
+  } else {
+    // 单行的错误，使用 showToast + 红色 X 效果
+    wx.showToast({
+      title: '错误: ' + errorMsg,
+      icon: 'none',
+      duration: 5000,  // 延长到5秒
+      image: '/images/icon-error.png'  // 使用自定义错误图标
+    });
+  }
 }
 
 /**
@@ -86,27 +141,23 @@ function request(options) {
             // 成功
             resolve(data.data);
           } else {
-            // 业务错误
-            const errMsg = data.detail || data.msg || '请求失败';
-            showError(errMsg);
-            reject({ code: data.code, message: errMsg, raw: res });
+            // 业务错误 - 解析错误详情，但不在这里显示
+            const errMsg = parseErrorDetail(data.detail || data.msg || '请求失败');
+            reject({ code: data.code, message: errMsg, data: data, raw: res });
           }
         } else if (statusCode === 401) {
           // 未授权
-          showError('认证失败，请重新登录');
           handleUnauthorized();
-          reject({ code: 401, message: '未授权', raw: res });
+          reject({ code: 401, message: '认证失败，请重新登录', raw: res });
         } else {
-          // 其他 HTTP 错误
-          const errMsg = data.detail || `请求错误(${statusCode})`;
-          showError(errMsg);
-          reject({ code: statusCode, message: errMsg, raw: res });
+          // 其他 HTTP 错误 - 解析错误详情
+          const errMsg = parseErrorDetail(data.detail || data.msg || `请求错误(${statusCode})`);
+          reject({ code: statusCode, message: errMsg, data: data, raw: res });
         }
       },
       fail: (err) => {
         // 网络错误
-        showError('网络连接异常，请检查网络设置');
-        reject({ code: -1, message: '网络连接异常', raw: err });
+        reject({ code: -1, message: '网络连接异常，请检查网络设置', raw: err });
       }
     });
   });

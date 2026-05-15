@@ -118,6 +118,15 @@
         <text class="tag-danger" wx:if="{{isItemExpired}}">已过期</text>
       </text>
     </view>
+    <!-- 货位行：点击可编辑 -->
+    <view class="goods-info-row allocation-row" bindtap="openAllocationDialog">
+      <text class="info-label">货位</text>
+      <view class="info-value allocation-value">
+        <text wx:if="{{currentAllocationName}}" class="allocation-text">{{currentAllocationName}}</text>
+        <text wx:else class="allocation-placeholder">点击设置货位</text>
+        <text class="arrow-right">›</text>
+      </view>
+    </view>
 
     <view class="card-divider"></view>
 
@@ -176,5 +185,78 @@
     </view>
     <text class="empty-text">请扫条码或输入物品信息</text>
     <text class="empty-hint">点击上方图标扫码</text>
+  </view>
+
+  <!-- 货位选择弹窗 -->
+  <view class="modal-mask" wx:if="{{showAllocationDialog}}" bindtap="closeAllocationDialog">
+    <view class="modal-dialog" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">编辑货位</text>
+        <text class="modal-close" bindtap="closeAllocationDialog">✕</text>
+      </view>
+
+      <view class="modal-body">
+        <!-- 搜索输入 -->
+        <view class="modal-search-wrap">
+          <input
+            class="modal-search-input"
+            placeholder="搜索货位"
+            value="{{allocationSearchKey}}"
+            bindinput="onAllocationSearchInput"
+          />
+        </view>
+
+        <!-- 货位列表 -->
+        <scroll-view class="allocation-list" scroll-y>
+          <view
+            class="allocation-item {{selectedAllocationId === item.id ? 'selected' : ''}}"
+            wx:for="{{filteredAllocations}}"
+            wx:key="id"
+            bindtap="selectAllocation"
+            data-id="{{item.id}}"
+            data-name="{{item.name}}"
+          >
+            <text class="allocation-item-name">{{item.name}}</text>
+            <text wx:if="{{selectedAllocationId === item.id}}" class="allocation-check">✓</text>
+          </view>
+          <view wx:if="{{filteredAllocations.length === 0}}" class="allocation-empty">
+            未找到货位
+          </view>
+        </scroll-view>
+      </view>
+
+      <view class="modal-footer">
+        <button class="modal-btn btn-create" bindtap="openCreateAllocationDialog">新增</button>
+        <button class="modal-btn btn-cancel" bindtap="closeAllocationDialog">取消</button>
+        <button class="modal-btn btn-confirm" bindtap="confirmAllocation">确定</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 新增货位弹窗 -->
+  <view class="modal-mask" wx:if="{{showCreateAllocationDialog}}" bindtap="closeCreateAllocationDialog">
+    <view class="modal-dialog modal-dialog-small" catchtap="preventBubble">
+      <view class="modal-header">
+        <text class="modal-title">新增货位</text>
+        <text class="modal-close" bindtap="closeCreateAllocationDialog">✕</text>
+      </view>
+
+      <view class="modal-body">
+        <view class="create-allocation-wrap">
+          <input
+            class="create-allocation-input"
+            placeholder="输入货位名称"
+            value="{{newAllocationName}}"
+            bindinput="onNewAllocationInput"
+            focus="{{true}}"
+          />
+        </view>
+      </view>
+
+      <view class="modal-footer">
+        <button class="modal-btn btn-cancel" bindtap="closeCreateAllocationDialog">取消</button>
+        <button class="modal-btn btn-confirm" bindtap="submitCreateAllocation">确定</button>
+      </view>
+    </view>
   </view>
 </view>

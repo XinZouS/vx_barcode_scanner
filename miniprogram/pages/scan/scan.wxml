@@ -17,7 +17,7 @@
         <view class="corner bottom-left"></view>
         <view class="corner bottom-right"></view>
       </view>
-      <text class="scan-hint">将条码放入框内</text>
+      <text class="scan-hint">将条码或二维码放入框内</text>
     </view>
 
     <!-- 未开始扫码时的巨大按钮覆盖层 -->

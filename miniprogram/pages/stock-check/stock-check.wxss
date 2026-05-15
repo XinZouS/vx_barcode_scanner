@@ -481,18 +481,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 36rpx;
+  font-size: 41rpx;  /* 加大5号：36→41 */
   font-weight: bold;
   flex-shrink: 0;
 }
 
 .qty-btn-minus {
-  background: #f0f0f0;
-  color: #666;
+  background: #fa5151;  /* 改为红色 */
+  color: white;
 }
 
 .qty-btn-minus:active {
-  background: #e0e0e0;
+  background: #e04040;  /* 深红色按下效果 */
 }
 
 .qty-btn-plus {
@@ -661,4 +661,203 @@
   font-size: 26rpx;
   color: #bbb;
   margin-bottom: 30rpx;
+}
+
+/* ===== 货位行样式 ===== */
+.allocation-row {
+  position: relative;
+}
+
+.allocation-value {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8rpx;
+}
+
+.allocation-text {
+  color: #1989fa;
+  font-size: 29rpx;
+}
+
+.allocation-placeholder {
+  color: #999;
+  font-size: 29rpx;
+}
+
+.arrow-right {
+  color: #999;
+  font-size: 32rpx;
+}
+
+/* ===== 弹窗样式 ===== */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-dialog {
+  width: 85%;
+  max-height: 80vh;
+  background: white;
+  border-radius: 16rpx;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-dialog-small {
+  width: 70%;
+  max-height: 50vh;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.modal-close {
+  font-size: 36rpx;
+  color: #999;
+  padding: 10rpx;
+}
+
+.modal-body {
+  flex: 1;
+  padding: 30rpx;
+  overflow-y: auto;
+}
+
+.modal-search-wrap {
+  margin-bottom: 20rpx;
+}
+
+.modal-search-input {
+  width: 100%;
+  height: 72rpx;
+  padding: 0 20rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+.allocation-list {
+  max-height: 500rpx;
+  overflow-y: auto;
+}
+
+.allocation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 20rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.allocation-item:active {
+  background: #f5f5f5;
+}
+
+.allocation-item.selected {
+  background: rgba(25, 137, 250, 0.08);
+  color: #1989fa;
+  font-weight: bold;
+}
+
+.allocation-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.allocation-check {
+  color: #1989fa;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.allocation-empty {
+  padding: 40rpx 0;
+  text-align: center;
+  color: #999;
+  font-size: 28rpx;
+}
+
+.create-allocation-wrap {
+  margin-bottom: 20rpx;
+}
+
+.create-allocation-input {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 20rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 20rpx;
+  padding: 20rpx 30rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.modal-btn {
+  padding: 12rpx 30rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  border: none;
+  line-height: 1.5;
+}
+
+.btn-create {
+  background: #1989fa;
+  color: white;
+}
+
+.btn-create:active {
+  background: #0570e6;
+}
+
+.btn-cancel {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.btn-cancel:active {
+  background: #e0e0e0;
+}
+
+.btn-confirm {
+  background: #5cb85c;
+  color: white;
+}
+
+.btn-confirm:active {
+  background: #4cae4c;
 }

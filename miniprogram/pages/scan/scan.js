@@ -16,7 +16,10 @@ Page({
     cooldownTime: 1000,  // 1秒冷却时间
     // 反馈设置
     vibrateEnabled: true,  // 震动反馈
-    mode: 'normal'  // 'normal' 或 'return'（返回结果模式）
+    mode: 'normal',  // 'normal' 或 'return'（返回结果模式）
+    // 扫码类型
+    currentScanType: '',  // 当前扫码类型：qrCode/barCode/dataMatrix/pdf417
+    currentScanTypeText: ''  // 当前扫码类型提示文本
   },
 
   onLoad(options) {
@@ -140,6 +143,7 @@ Page({
     }
     
     const code = e.detail.result
+    const scanType = e.detail.scanType || 'unknown'  // 获取扫码类型
     
     if (!code) {
       return
@@ -152,6 +156,27 @@ Page({
     }
     
     this.setData({ lastScanTime: now })
+    
+    // 根据扫码类型设置提示信息
+    let scanTypeText = '识别成功'
+    if (scanType === 'qrCode') {
+      scanTypeText = '二维码识别成功'
+    } else if (scanType === 'barCode') {
+      scanTypeText = '条码识别成功'
+    } else if (scanType === 'dataMatrix') {
+      scanTypeText = 'DataMatrix识别成功'
+    } else if (scanType === 'pdf417') {
+      scanTypeText = 'PDF417识别成功'
+    }
+    
+    // 保存扫码类型和提示信息到页面数据中
+    this.setData({ 
+      currentScanType: scanType,
+      currentScanTypeText: scanTypeText
+    })
+    
+    // 显示对应类型的成功提示
+    this.showSuccessFeedback(scanTypeText)
     
     // 如果是 return 模式，直接返回结果并关闭页面
     if (mode === 'return') {
@@ -166,7 +191,7 @@ Page({
           // 通过 eventChannel 传递数据
           const eventChannel = this.getOpenerEventChannel()
           if (eventChannel) {
-            eventChannel.emit('scanResult', { code })
+            eventChannel.emit('scanResult', { code, scanType })
           }
         }
       }
