@@ -140,11 +140,21 @@ function request(options) {
           if (data.code === 0) {
             // 成功
             resolve(data.data);
-          } else {
-            // 业务错误 - 解析错误详情，但不在这里显示
-            const errMsg = parseErrorDetail(data.detail || data.msg || '请求失败');
-            reject({ code: data.code, message: errMsg, data: data, raw: res });
+        } else {
+          // 业务错误 - 解析错误详情，但不在这里显示
+          const errMsg = parseErrorDetail(data.detail || data.msg || '请求失败');
+
+          // 检测到"请重新登录"类提示，清除本地登录状态
+          if (
+            (typeof data.detail === 'string' && data.detail.includes('请重新登录')) ||
+            (typeof data.msg === 'string' && data.msg.includes('请重新登录')) ||
+            errMsg.includes('请重新登录')
+          ) {
+            handleUnauthorized();
           }
+
+          reject({ code: data.code, message: errMsg, data: data, raw: res });
+        }
         } else if (statusCode === 401) {
           // 未授权
           handleUnauthorized();
@@ -152,6 +162,16 @@ function request(options) {
         } else {
           // 其他 HTTP 错误 - 解析错误详情
           const errMsg = parseErrorDetail(data.detail || data.msg || `请求错误(${statusCode})`);
+
+          // 检测"请重新登录"类提示
+          if (
+            (typeof data.detail === 'string' && data.detail.includes('请重新登录')) ||
+            (typeof data.msg === 'string' && data.msg.includes('请重新登录')) ||
+            errMsg.includes('请重新登录')
+          ) {
+            handleUnauthorized();
+          }
+
           reject({ code: statusCode, message: errMsg, data: data, raw: res });
         }
       },
