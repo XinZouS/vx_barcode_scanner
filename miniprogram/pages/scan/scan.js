@@ -55,13 +55,107 @@ Page({
       })
     }
     
-    // 自动开始扫码
-    this.showSuccessFeedback('开始扫码')
+    // 检查相机权限，通过后才开始扫码
+    this.checkCameraPermission().then((hasPermission) => {
+      if (hasPermission) {
+        this.setData({ isScanning: true })
+        this.showSuccessFeedback('开始扫码')
+      } else {
+        this.setData({ isScanning: false })
+      }
+    })
   },
 
   onUnload() {
     // 页面卸载时停止扫码
     this.setData({ isScanning: false })
+  },
+
+  /**
+   * 相机错误回调
+   */
+  onCameraError(e) {
+    console.error('Camera error:', e.detail)
+    wx.showToast({
+      title: '相机启动失败，请检查权限',
+      icon: 'none',
+      duration: 2000
+    })
+  },
+
+  /**
+   * 检查相机权限，无权限时弹窗引导用户授权
+   * @returns {Promise<boolean>} 是否有权限
+   */
+  checkCameraPermission() {
+    return new Promise((resolve) => {
+      wx.getSetting({
+        success: (res) => {
+          if (res.authSetting['scope.camera'] === true) {
+            // 已授权
+            resolve(true)
+          } else if (res.authSetting['scope.camera'] === false) {
+            // 曾拒绝过，引导去设置页
+            wx.showModal({
+              title: '需要相机权限',
+              content: '扫码功能需要访问相机，请在设置中开启相机权限',
+              confirmText: '去设置',
+              success: (modalRes) => {
+                if (modalRes.confirm) {
+                  wx.openSetting({
+                    success: (settingRes) => {
+                      const granted = settingRes.authSetting['scope.camera'] === true
+                      if (!granted) {
+                        wx.showToast({ title: '未开启相机权限', icon: 'none' })
+                      }
+                      resolve(granted)
+                    },
+                    fail: () => {
+                      resolve(false)
+                    }
+                  })
+                } else {
+                  resolve(false)
+                }
+              }
+            })
+          } else {
+            // 首次请求权限
+            wx.authorize({
+              scope: 'scope.camera',
+              success: () => resolve(true),
+              fail: () => {
+                // 用户拒绝，引导去设置
+                wx.showModal({
+                  title: '需要相机权限',
+                  content: '扫码功能需要访问相机，请在设置中开启相机权限',
+                  confirmText: '去设置',
+                  success: (modalRes) => {
+                    if (modalRes.confirm) {
+                      wx.openSetting({
+                        success: (settingRes) => {
+                          const granted = settingRes.authSetting['scope.camera'] === true
+                          if (!granted) {
+                            wx.showToast({ title: '未开启相机权限', icon: 'none' })
+                          }
+                          resolve(granted)
+                        },
+                        fail: () => {
+                          resolve(false)
+                        }
+                      })
+                    } else {
+                      resolve(false)
+                    }
+                  }
+                })
+              }
+            })
+          }
+        },
+        fail: () => resolve(false)
+      })
+    })
   },
 
   /**
@@ -121,12 +215,16 @@ Page({
       // 暂停扫码
       this.setData({ isScanning: false })
     } else {
-      // 开始扫码
-      this.setData({ isScanning: true, cooldown: false })
-      wx.showToast({
-        title: '开始扫码',
-        icon: 'success',
-        duration: 1000
+      // 开始扫码前先检查权限
+      this.checkCameraPermission().then((hasPermission) => {
+        if (hasPermission) {
+          this.setData({ isScanning: true, cooldown: false })
+          wx.showToast({
+            title: '开始扫码',
+            icon: 'success',
+            duration: 1000
+          })
+        }
       })
     }
   },
@@ -175,8 +273,9 @@ Page({
       currentScanTypeText: scanTypeText
     })
     
-    // 显示对应类型的成功提示
+    // 显示对应类型的成功提示 + 震动反馈
     this.showSuccessFeedback(scanTypeText)
+    this.vibrateFeedback()
     
     // 如果是 return 模式，直接返回结果并关闭页面
     if (mode === 'return') {

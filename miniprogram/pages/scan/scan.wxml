@@ -5,6 +5,7 @@
       class="camera" 
       mode="scanCode" 
       bindscancode="onScanCode"
+      binderror="onCameraError"
       flash="off"
       device-position="back"
     ></camera>

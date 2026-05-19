@@ -304,18 +304,62 @@
   font-weight: bold;
   color: #333;
   display: block;
+}
+
+.result-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 8rpx;
 }
 
 .result-spec {
-  font-size: 26rpx;
+  font-size: 30rpx;
   color: #666;
   display: block;
   margin-bottom: 5rpx;
 }
 
 .result-meta {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.result-meta-row {
+  display: flex;
+  align-items: center;
+}
+
+.result-qty {
+  color: #1989fa;
+  font-weight: 500;
+}
+
+.result-status {
+  flex-shrink: 0;
+}
+
+.status-tag {
+  display: inline-block;
   font-size: 24rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 6rpx;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-checked {
+  background: #e8f5e8;
+  color: #5cb85c;
+}
+
+.status-unchecked {
+  background: #fff7e6;
+  color: #e6a23c;
+}
+
+.status-unknown {
+  background: #f5f5f5;
   color: #999;
 }
 
@@ -701,7 +745,7 @@
 
 .allocation-text {
   color: #1989fa;
-  font-size: 29rpx;
+  font-size: 36rpx;
 }
 
 .allocation-placeholder {
@@ -755,7 +799,7 @@
 
 .specified-allocation-row .allocation-text {
   color: #1989fa;
-  font-size: 28rpx;
+  font-size: 36rpx;
 }
 
 .specified-allocation-row .allocation-placeholder {

@@ -13,6 +13,11 @@
     "navigationBarTitleText": "条码扫码计数",
     "navigationBarTextStyle": "white"
   },
+  "permission": {
+    "scope.camera": {
+      "desc": "用于扫码识别商品条码"
+    }
+  },
   "sitemapLocation": "sitemap.json",
   "style": "v2",
   "lazyCodeLoading": "requiredComponents"
