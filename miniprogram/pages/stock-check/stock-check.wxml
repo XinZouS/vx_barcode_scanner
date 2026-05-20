@@ -114,9 +114,12 @@
             <view wx:else class="status-tag status-unknown">未设置</view>
           </view>
         </view>
-        <text class="result-spec">{{item.specification || '--'}}</text>
+        <view class="result-spec-row">
+          <text class="result-spec">{{item.specification || '--'}}</text>
+          <text class="result-id-text">ID：{{item.info}}</text>
+        </view>
         <view class="result-meta-row">
-          <text class="result-meta">批号:{{item.batch || '--'}} · 数量:</text>
+          <text class="result-meta">批号:{{item.batch || '--'}} · 数量：</text>
           <text class="result-qty">{{item.quantity || 0}}</text>
         </view>
       </view>
@@ -127,7 +130,7 @@
   <view class="goods-card card" wx:if="{{currentItem && !searchLoading}}">
     <!-- 名称作为卡片标题 -->
     <view class="card-title-wrap">
-      <view class="card-title">{{currentItem.name || '--'}}</view>
+      <view class="card-title">{{currentItem.name || '--'}}（ID：{{currentItem.info}}）</view>
       <view class="card-close" bindtap="closeGoodsCard">✕</view>
     </view>
     <view class="goods-info-row">
@@ -154,13 +157,11 @@
       <text class="info-label">当前货位</text>
       <view class="info-value allocation-value">
         <text wx:if="{{currentItem.allocation_name}}" class="allocation-text">{{currentItem.allocation_name}}</text>
-        <text wx:elif="{{specifiedAllocationName}}" class="allocation-text">由：{{currentItem.allocation_name}} 更新为： {{specifiedAllocationName}}</text>
+        <text wx:elif="{{specifiedAllocationName}}" class="allocation-text">由：{{currentItem.allocation_name || '(空货位)'}} 更新为：{{specifiedAllocationName}}</text>
         <text wx:else class="allocation-placeholder">点击设置货位</text>
         <text class="arrow-right">›</text>
       </view>
     </view>
-
-    <view class="card-divider"></view>
 
     <!-- 数量对比 - 4:6 布局 -->
     <view class="qty-compare">
@@ -197,6 +198,9 @@
       >{{submitBtnText}}</button>
     </view>
   </view>
+
+  <!-- 透明占位：撑开底部空间，让卡片可上滑不被固定按钮遮挡 -->
+  <view class="spacer" wx:if="{{currentItem && !searchLoading}}"></view>
 
   <!-- 未找到提示 - 仅在有搜索关键词时显示 -->
   <view class="empty-state" wx:if="{{searchKey && searched && !currentItem && searchResults.length === 0 && !searchLoading}}">

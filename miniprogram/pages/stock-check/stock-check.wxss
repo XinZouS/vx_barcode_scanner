@@ -3,7 +3,8 @@
 .container {
   min-height: 100vh;
   background-color: #e8f5e8;
-  padding-bottom: 40rpx;
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
 }
 
 /* 顶部标题区域 - 复用 index 页面样式 */
@@ -300,7 +301,7 @@
 }
 
 .result-name {
-  font-size: 30rpx;
+  font-size: 32rpx;
   font-weight: bold;
   color: #333;
   display: block;
@@ -318,6 +319,19 @@
   color: #666;
   display: block;
   margin-bottom: 5rpx;
+}
+
+.result-spec-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5rpx;
+}
+
+.result-id-text {
+  font-size: 30rpx;
+  color: #666;
+  flex-shrink: 0;
 }
 
 .result-meta {
@@ -341,7 +355,7 @@
 
 .status-tag {
   display: inline-block;
-  font-size: 24rpx;
+  font-size: 28rpx;
   padding: 6rpx 16rpx;
   border-radius: 6rpx;
   font-weight: 500;
@@ -366,7 +380,6 @@
 /* 物品信息卡片 */
 .goods-card {
   margin-top: 30rpx;
-  /* 移除 padding-bottom，因为提交按钮已固定底部 */
 }
 
 /* 卡片内容自动高度 */
@@ -380,7 +393,7 @@
 }
 
 .goods-card .info-value {
-  font-size: 29rpx;  /* 加大1号：28→29 */
+  font-size: 30rpx;
   color: #333;
   text-align: right;
   flex: 1;
@@ -405,15 +418,15 @@
 }
 
 .card-close {
-  width: 48rpx;
-  height: 48rpx;
+  width: 66rpx;
+  height: 66rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #fff0f0;
   color: #fa5151;
   border-radius: 50%;
-  font-size: 28rpx;
+  font-size: 36rpx;
   flex-shrink: 0;
 }
 
@@ -462,12 +475,6 @@
   margin-left: 10rpx;
 }
 
-.card-divider {
-  height: 1rpx;
-  background: #e0e0e0;
-  margin: 25rpx 0;
-}
-
 /* 数量对比 - 4:6 布局 */
 .qty-compare {
   display: flex;
@@ -492,7 +499,7 @@
 }
 
 .qty-label {
-  font-size: 24rpx;
+  font-size: 28rpx;
   color: #999;
 }
 
@@ -606,18 +613,21 @@
 .submit-wrap {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 20rpx 30rpx;
+  left: 30rpx;
+  width: calc(100vw - 60rpx);
+  padding: 20rpx 0;
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
   background: white;
   box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.05);
   z-index: 1000;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 /* 提交按钮 - 基础样式 */
 .btn-submit {
-  width: 100%;
+  flex: 1;
   padding: 25rpx 0;
   text-align: center;
   font-size: 32rpx;
@@ -625,6 +635,7 @@
   border-radius: 50rpx;
   border: none;
   transition: all 0.3s;
+  margin: 0;
 }
 
 /* 数量相符 - 淡绿色 */
@@ -656,6 +667,11 @@
   background: #f5f5f5;
   color: #999;
   border-color: #e0e0e0;
+}
+
+/* 透明占位块：撑开底部，避免固定按钮遮挡上方内容 */
+.spacer {
+  height: 180rpx;
 }
 
 /* 空状态 - 复用 index 页面样式 */
@@ -820,7 +836,7 @@
 }
 
 .auto-link-label {
-  font-size: 24rpx;
+  font-size: 28rpx;
   color: #999;
   margin-right: 8rpx;
 }
