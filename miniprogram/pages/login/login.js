@@ -2,6 +2,9 @@
 const request = require('../../utils/request');
 const userManager = require('../../utils/user');
 
+const STORAGE_KEY = 'remembered_login';
+const TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 天
+
 Page({
   data: {
     username: '',
@@ -52,9 +55,12 @@ Page({
    * 切换记住登录
    */
   toggleRemember() {
-    this.setData({
-      rememberMe: !this.data.rememberMe
-    });
+    const newVal = !this.data.rememberMe;
+    this.setData({ rememberMe: newVal });
+    // 取消勾选时清除本地记录
+    if (!newVal) {
+      wx.removeStorageSync(STORAGE_KEY);
+    }
   },
 
   /**
@@ -101,6 +107,15 @@ Page({
     }).then(data => {
       // 登录成功
       this.setData({ loading: false });
+
+      // 记住登录：明文保存用户名、密码和时间戳
+      if (rememberMe) {
+        wx.setStorageSync(STORAGE_KEY, {
+          username: username.trim(),
+          password: password,
+          timestamp: Date.now()
+        });
+      }
 
       // 保存用户信息（data 是 response.data.data）
       userManager.login(data);
@@ -165,13 +180,44 @@ Page({
   },
 
   /**
+   * 从本地存储加载记住的登录信息
+   */
+  loadRememberedLogin() {
+    try {
+      const stored = wx.getStorageSync(STORAGE_KEY);
+      if (!stored) return;
+
+      const { username, password, timestamp } = stored;
+      const now = Date.now();
+
+      // 检查是否在 7 天有效期内
+      if (now - timestamp <= TTL_MS) {
+        this.setData({
+          username: username || '',
+          password: password || '',
+          rememberMe: true
+        });
+      } else {
+        // 过期，清除
+        wx.removeStorageSync(STORAGE_KEY);
+      }
+    } catch (e) {
+      // 数据异常，清除
+      wx.removeStorageSync(STORAGE_KEY);
+    }
+  },
+
+  /**
    * 生命周期 - 页面加载
    */
   onLoad() {
     // 如果已经登录，直接返回
     if (userManager.checkLogin()) {
       wx.navigateBack();
+      return;
     }
+    // 加载记住的登录信息
+    this.loadRememberedLogin();
   },
 
   /**
