@@ -6,6 +6,7 @@ Page({
     taskName: '',
     scanMode: 'single',  // 'single' 或 'continuous'
     isScanning: true,  // 默认开始扫码
+    cameraReady: false,  // 权限通过后才渲染 camera 组件
     cooldown: false,
     scannedList: [],  // 本次扫码的数据 [{code, count}]
     scannedCount: 0,
@@ -55,14 +56,100 @@ Page({
       })
     }
     
-    // 检查相机权限，通过后才开始扫码
-    this.checkCameraPermission().then((hasPermission) => {
+    // 初始化相机：先隐私授权 → 相机权限 → 渲染 camera
+    this.initCamera()
+  },
+
+  /**
+   * 初始化相机（完整流程）
+   * 隐私授权 → 相机权限检查 → 渲染 camera 组件
+   */
+  async initCamera() {
+    try {
+      // 步骤1：确保隐私协议已同意（发布版必需）
+      const privacyOk = await this.ensurePrivacyAuth()
+      if (!privacyOk) {
+        this.setData({ isScanning: false })
+        wx.showModal({
+          title: '需要隐私授权',
+          content: '扫码功能需要您同意小程序隐私保护指引，请重新进入页面后授权',
+          showCancel: false
+        })
+        return
+      }
+
+      // 步骤2：检查相机权限
+      const hasPermission = await this.checkCameraPermission()
       if (hasPermission) {
-        this.setData({ isScanning: true })
-        this.showSuccessFeedback('开始扫码')
+        // 步骤3：用 nextTick 确保 setData 已提交后再渲染 camera
+        this.setData({ cameraReady: true, isScanning: true }, () => {
+          this.showSuccessFeedback('开始扫码')
+        })
       } else {
         this.setData({ isScanning: false })
+        wx.showToast({
+          title: '未获取相机权限，无法扫码',
+          icon: 'none',
+          duration: 2000
+        })
       }
+    } catch (err) {
+      console.error('initCamera error:', err)
+      this.setData({ isScanning: false })
+      wx.showToast({
+        title: '相机初始化失败',
+        icon: 'none',
+        duration: 2000
+      })
+    }
+  },
+
+  /**
+   * 确保隐私授权已同意
+   * - 基础库 >= 2.32.3：调用 wx.requirePrivacyAuthorize 触发原生弹窗
+   * - 旧版基础库：隐私授权由微信自动处理，跳过此步骤
+   * @returns {Promise<boolean>}
+   */
+  ensurePrivacyAuth() {
+    return new Promise((resolve) => {
+      // 检查 wx.requirePrivacyAuthorize 是否存在（基础库 >= 2.32.3）
+      if (typeof wx.requirePrivacyAuthorize !== 'function') {
+        // 旧版基础库，无需手动处理
+        resolve(true)
+        return
+      }
+
+      wx.requirePrivacyAuthorize({
+        success: () => {
+          // 用户同意隐私协议
+          resolve(true)
+        },
+        fail: () => {
+          // 用户拒绝或已同意过（已同意也会走 fail 回调）
+          // 区分：已同意 → resolve(true)；拒绝 → resolve(false)
+          this.checkPrivacyAccepted().then((accepted) => {
+            resolve(accepted)
+          })
+        }
+      })
+    })
+  },
+
+  /**
+   * 检查隐私协议是否已被接受
+   */
+  checkPrivacyAccepted() {
+    return new Promise((resolve) => {
+      wx.getPrivacySetting({
+        success: (res) => {
+          // needAuthorization: true 表示需要用户同意但未同意
+          resolve(!res.needAuthorization)
+        },
+        fail: () => {
+          // API 不可用，假定已同意
+          resolve(true)
+        }
+      })
     })
   },
 
@@ -72,29 +159,77 @@ Page({
   },
 
   /**
-   * 相机错误回调
+   * 相机错误回调 — 细分错误原因并给出针对性提示
    */
   onCameraError(e) {
-    console.error('Camera error:', e.detail)
-    wx.showToast({
-      title: '相机启动失败，请检查权限',
-      icon: 'none',
-      duration: 2000
+    const detail = e.detail || {}
+    const errMsg = detail.errMsg || ''
+    console.error('Camera error:', JSON.stringify(detail))
+
+    // 隐私协议未同意导致的相机失败
+    if (errMsg.indexOf('privacy') > -1 || errMsg.indexOf('auth deny') > -1) {
+      wx.showModal({
+        title: '需要隐私授权',
+        content: '相机需要您同意小程序隐私保护指引后才能使用。\n请重新进入页面并同意授权。',
+        showCancel: false
+      })
+      return
+    }
+
+    // 相机权限被拒绝（系统级或微信级）
+    if (errMsg.indexOf('permission') > -1 || errMsg.indexOf('camera') > -1) {
+      wx.showModal({
+        title: '相机权限未开启',
+        content: '请在系统设置中允许微信访问相机，或在微信设置中开启相机权限。',
+        confirmText: '去设置',
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            wx.openSetting()
+          }
+        }
+      })
+      return
+    }
+
+    // 其他未知错误
+    wx.showModal({
+      title: '相机启动失败',
+      content: `错误信息：${errMsg || '未知错误'}\n请确认系统设置中微信的相机权限已开启。`,
+      confirmText: '去设置',
+      success: (modalRes) => {
+        if (modalRes.confirm) {
+          wx.openSetting()
+        }
+      }
     })
   },
 
   /**
+   * 相机初始化成功回调
+   */
+  onCameraInitDone(e) {
+    console.log('Camera init done:', e.detail)
+    // 相机就绪，可以开始扫码
+    if (!this.data.isScanning) {
+      this.setData({ isScanning: true })
+    }
+  },
+
+  /**
    * 检查相机权限，无权限时弹窗引导用户授权
+   * 注意：不再使用 wx.authorize，由 <camera> 组件原生的权限弹窗处理首次授权
    * @returns {Promise<boolean>} 是否有权限
    */
   checkCameraPermission() {
     return new Promise((resolve) => {
       wx.getSetting({
         success: (res) => {
-          if (res.authSetting['scope.camera'] === true) {
-            // 已授权
-            resolve(true)
-          } else if (res.authSetting['scope.camera'] === false) {
+          const cameraAuth = res.authSetting['scope.camera'];
+
+          if (cameraAuth === true) {
+            // 已授权，直接通过
+            resolve(true);
+          } else if (cameraAuth === false) {
             // 曾拒绝过，引导去设置页
             wx.showModal({
               title: '需要相机权限',
@@ -104,58 +239,28 @@ Page({
                 if (modalRes.confirm) {
                   wx.openSetting({
                     success: (settingRes) => {
-                      const granted = settingRes.authSetting['scope.camera'] === true
+                      const granted = settingRes.authSetting['scope.camera'] === true;
                       if (!granted) {
-                        wx.showToast({ title: '未开启相机权限', icon: 'none' })
+                        wx.showToast({ title: '未开启相机权限', icon: 'none' });
                       }
-                      resolve(granted)
+                      resolve(granted);
                     },
-                    fail: () => {
-                      resolve(false)
-                    }
-                  })
+                    fail: () => resolve(false)
+                  });
                 } else {
-                  resolve(false)
+                  resolve(false);
                 }
               }
-            })
+            });
           } else {
-            // 首次请求权限
-            wx.authorize({
-              scope: 'scope.camera',
-              success: () => resolve(true),
-              fail: () => {
-                // 用户拒绝，引导去设置
-                wx.showModal({
-                  title: '需要相机权限',
-                  content: '扫码功能需要访问相机，请在设置中开启相机权限',
-                  confirmText: '去设置',
-                  success: (modalRes) => {
-                    if (modalRes.confirm) {
-                      wx.openSetting({
-                        success: (settingRes) => {
-                          const granted = settingRes.authSetting['scope.camera'] === true
-                          if (!granted) {
-                            wx.showToast({ title: '未开启相机权限', icon: 'none' })
-                          }
-                          resolve(granted)
-                        },
-                        fail: () => {
-                          resolve(false)
-                        }
-                      })
-                    } else {
-                      resolve(false)
-                    }
-                  }
-                })
-              }
-            })
+            // undefined — 首次使用，让 <camera> 组件原生弹窗处理授权
+            // 直接通过，camera 组件渲染时会自动触发微信原生权限弹窗
+            resolve(true);
           }
         },
         fail: () => resolve(false)
-      })
-    })
+      });
+    });
   },
 
   /**
@@ -212,20 +317,11 @@ Page({
     const { isScanning } = this.data
     
     if (isScanning) {
-      // 暂停扫码
-      this.setData({ isScanning: false })
+      // 暂停扫码：隐藏 camera 释放资源
+      this.setData({ isScanning: false, cameraReady: false })
     } else {
-      // 开始扫码前先检查权限
-      this.checkCameraPermission().then((hasPermission) => {
-        if (hasPermission) {
-          this.setData({ isScanning: true, cooldown: false })
-          wx.showToast({
-            title: '开始扫码',
-            icon: 'success',
-            duration: 1000
-          })
-        }
-      })
+      // 重新初始化相机
+      this.initCamera()
     }
   },
 
