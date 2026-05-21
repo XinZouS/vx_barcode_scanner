@@ -1,11 +1,14 @@
 <view class="container">
   <!-- 扫码区域 -->
   <view class="scan-section">
+    <!-- camera 仅在权限确认通过后才渲染，由原生权限弹窗处理首次授权 -->
     <camera 
+      wx:if="{{cameraReady}}"
       class="camera" 
       mode="scanCode" 
       bindscancode="onScanCode"
       binderror="onCameraError"
+      bindinitdone="onCameraInitDone"
       flash="off"
       device-position="back"
     ></camera>
