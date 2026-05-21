@@ -4,7 +4,6 @@
     <view class="header-top">
       <view class="title-wrapper">
         <view class="title">条码扫码计数工具</view>
-        <view class="subtitle">高效便捷的条码计数解决方案</view>
       </view>
       
       <!-- 用户区域（右上角） -->
