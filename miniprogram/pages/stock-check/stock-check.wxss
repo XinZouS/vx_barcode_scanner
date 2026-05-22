@@ -403,11 +403,21 @@
   line-height: 1.5;
 }
 
+.card-title-row {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 12rpx;
+  min-width: 0;  /* 防止 flex 子元素溢出 */
+}
+
 .card-title {
   font-size: 34rpx;
   font-weight: bold;
   color: #333;
   flex: 1;
+  word-break: break-all;
+  line-height: 1.4;
 }
 
 .card-title-wrap {

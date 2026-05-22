@@ -130,7 +130,11 @@
   <view class="goods-card card" wx:if="{{currentItem && !searchLoading}}">
     <!-- 名称作为卡片标题 -->
     <view class="card-title-wrap">
-      <view class="card-title">{{currentItem.name || '--'}}（ID：{{currentItem.info}}）</view>
+      <view class="card-title-row">
+        <view wx:if="{{currentItem.ischecked === true}}" class="status-tag status-checked">已记录</view>
+        <view wx:elif="{{currentItem.ischecked === false}}" class="status-tag status-unchecked">待记录</view>
+        <text class="card-title">{{currentItem.name || '--'}}（ID：{{currentItem.info}}）</text>
+      </view>
       <view class="card-close" bindtap="closeGoodsCard">✕</view>
     </view>
     <view class="goods-info-row">
