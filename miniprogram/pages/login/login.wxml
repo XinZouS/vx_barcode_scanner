@@ -1,7 +1,7 @@
 <!--pages/login/login.wxml-->
 <view class="container">
   <!-- 登录表单卡片 -->
-  <view class="login-card">
+  <view class="login-card" style="transform: translateY(-{{cardOffset}}px); transition: transform 0.3s ease;">
     <!-- 表单标题 -->
     <view class="form-header">
       <text class="form-title">用户登录</text>
@@ -17,6 +17,8 @@
         value="{{username}}"
         bindinput="onUsernameInput"
         bindconfirm="focusPassword"
+        bindfocus="onUsernameFocus"
+        bindblur="onUsernameBlur"
         focus="{{usernameFocus}}"
       />
       <text class="error-text" wx:if="{{usernameError}}">{{usernameError}}</text>
@@ -33,6 +35,8 @@
           value="{{password}}"
           bindinput="onPasswordInput"
           bindconfirm="doLogin"
+          bindfocus="onPasswordFocus"
+          bindblur="onPasswordBlur"
           focus="{{passwordFocus}}"
         />
         <view class="toggle-pwd" bindtap="togglePasswordVisibility">

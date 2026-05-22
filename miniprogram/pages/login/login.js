@@ -17,6 +17,9 @@ Page({
     usernameFocus: true,  // 页面加载后自动聚焦用户名
     passwordFocus: false,
 
+    // 键盘避让：卡片上移量(px)
+    cardOffset: 0,
+
     // 错误信息
     usernameError: '',
     passwordError: ''
@@ -33,6 +36,25 @@ Page({
   },
 
   /**
+   * 用户名获得焦点 — 卡片上移 50px
+   */
+  onUsernameFocus() {
+    this.setData({ cardOffset: 50, usernameFocus: true, passwordFocus: false });
+  },
+
+  /**
+   * 用户名失去焦点 — 恢复（除非密码获得焦点）
+   */
+  onUsernameBlur() {
+    // 稍等让 password focus 先触发
+    setTimeout(() => {
+      if (!this.data.passwordFocus) {
+        this.setData({ cardOffset: 0 });
+      }
+    }, 100);
+  },
+
+  /**
    * 密码输入
    */
   onPasswordInput(e) {
@@ -40,6 +62,20 @@ Page({
       password: e.detail.value,
       passwordError: ''  // 清除错误
     });
+  },
+
+  /**
+   * 密码获得焦点 — 卡片上移 160px
+   */
+  onPasswordFocus() {
+    this.setData({ cardOffset: 160, usernameFocus: false, passwordFocus: true });
+  },
+
+  /**
+   * 密码失去焦点 — 恢复
+   */
+  onPasswordBlur() {
+    this.setData({ cardOffset: 0 });
   },
 
   /**
