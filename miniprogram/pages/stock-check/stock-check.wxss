@@ -355,7 +355,7 @@
 
 .status-tag {
   display: inline-block;
-  font-size: 28rpx;
+  font-size: 30rpx;
   padding: 6rpx 16rpx;
   border-radius: 6rpx;
   font-weight: 500;

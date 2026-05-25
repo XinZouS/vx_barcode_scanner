@@ -131,8 +131,6 @@
     <!-- 名称作为卡片标题 -->
     <view class="card-title-wrap">
       <view class="card-title-row">
-        <view wx:if="{{currentItem.ischecked === true}}" class="status-tag status-checked">已记录</view>
-        <view wx:elif="{{currentItem.ischecked === false}}" class="status-tag status-unchecked">待记录</view>
         <text class="card-title">{{currentItem.name || '--'}}（ID：{{currentItem.info}}）</text>
       </view>
       <view class="card-close" bindtap="closeGoodsCard">✕</view>
@@ -154,6 +152,15 @@
       <view class="info-value" style="display:flex;align-items:center;justify-content:flex-end;gap:8rpx;">
         <text class="{{isItemExpired ? 'text-danger' : ''}}">{{currentItem.expire_date || '--'}}</text>
         <text class="tag-danger" wx:if="{{isItemExpired}}">已过期</text>
+      </view>
+    </view>
+    <!-- 记录状态 -->
+    <view class="goods-info-row">
+      <text class="info-label">状态</text>
+      <view class="info-value" style="display:flex;align-items:center;justify-content:flex-end;">
+        <view wx:if="{{currentItem.ischecked === true}}" class="status-tag status-checked">已记录</view>
+        <view wx:elif="{{currentItem.ischecked === false}}" class="status-tag status-unchecked">待记录</view>
+        <view wx:else class="status-tag status-unknown">未记录</view>
       </view>
     </view>
     <!-- 当前货位行：展示物品自己的货位，点击可设置全局指定货位 -->
