@@ -28,6 +28,10 @@ Page({
     startLoading: false,
     submitLoading: false,
 
+    // 成功提示浮层
+    showSuccessOverlay: false,
+    successOverlayMsg: '',
+
     // 计算属性
     computedDelta: null,
     deltaClass: '',
@@ -143,6 +147,15 @@ Page({
     })
   },
 
+  /**
+   * 跳转手动报溢页面
+   */
+  goManualOverflow() {
+    wx.navigateTo({
+      url: '/pages/manual-overflow/manual-overflow'
+    })
+  },
+
   // ========== 搜索相关 ==========
   onSearchInput(e) {
     this.setData({ searchKey: e.detail.value })
@@ -247,16 +260,26 @@ Page({
 
     if (delta > 0) {
       deltaClass = 'delta-loss'
-      submitBtnText = `提交报损（短缺 ${delta}）`
+      submitBtnText = `提交报损（短缺 ${this.formatNum(delta)}）`
     } else if (delta < 0) {
       deltaClass = 'delta-overage'
-      submitBtnText = `提交报溢（溢出 ${-delta}）`
+      submitBtnText = `提交报溢（溢出 ${this.formatNum(-delta)}）`
     } else {
       deltaClass = 'delta-ok'
       submitBtnText = '✓ 数量相符 - 提交'
     }
 
     this.setData({ computedDelta: delta, deltaClass, submitBtnText })
+  },
+
+  /**
+   * 格式化数字：四舍五入到最多 6 位小数，去除尾 0
+   */
+  formatNum(n) {
+    const rounded = Math.round(Math.abs(n) * 1e6) / 1e6
+    let str = rounded.toFixed(6)
+    str = str.replace(/\.?0+$/, '')
+    return str || '0'
   },
 
   // ========== 提交统计 ==========
@@ -291,13 +314,23 @@ Page({
       wx.vibrateShort({ type: 'medium' })
       setTimeout(() => { wx.vibrateShort({ type: 'medium' }) }, 100)
 
-      if (delta === 0) {
-        wx.showToast({ title: '完成：数量相符 ✓', icon: 'success' })
-      } else if (delta > 0) {
-        wx.showToast({ title: `完成：短缺 ${Math.abs(delta)}`, icon: 'none' })
-      } else {
-        wx.showToast({ title: `完成：溢出 ${Math.abs(delta)}`, icon: 'none' })
-      }
+      // 更新搜索结果列表中该物品的 ischecked 状态
+      const { searchResults } = this.data
+      const updatedResults = searchResults.map(item => {
+        if (item.id === currentItem.id) {
+          return { ...item, ischecked: true }
+        }
+        return item
+      })
+      this.setData({ searchResults: updatedResults })
+
+      // 构建成功提示文案
+      let msg = '数量相符 ✓'
+      if (delta > 0) msg = `报损 ${this.formatNum(delta)} ✓`
+      else if (delta < 0) msg = `报溢 ${this.formatNum(-delta)} ✓`
+
+      // 显示大勾成功浮层
+      this.showLargeSuccess(msg)
 
       await this.fetchProgress()
       this.setData({
@@ -462,6 +495,14 @@ Page({
   },
 
   preventBubble() {},
+
+  // ========== 成功大勾浮层 ==========
+  showLargeSuccess(msg) {
+    this.setData({ showSuccessOverlay: true, successOverlayMsg: msg })
+    setTimeout(() => {
+      this.setData({ showSuccessOverlay: false, successOverlayMsg: '' })
+    }, 2000)
+  },
 
   // ========== 错误提示 ==========
   parseErrorDetail(detail) {

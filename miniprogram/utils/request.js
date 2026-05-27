@@ -244,6 +244,19 @@ module.exports = {
   },
 
   /**
+   * PATCH 请求
+   * @param {string} url - 请求地址
+   * @param {Object} data - 请求数据
+   */
+  patch(url, data = {}) {
+    return request({
+      url,
+      method: 'PATCH',
+      data
+    });
+  },
+
+  /**
    * 原始请求方法（完整配置）
    */
   request

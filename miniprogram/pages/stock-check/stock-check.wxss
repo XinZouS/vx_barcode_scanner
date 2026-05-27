@@ -109,6 +109,33 @@
   background: rgba(255, 243, 224, 0.8);
 }
 
+/* 右上角按钮组 */
+.header-btns {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-shrink: 0;
+}
+
+/* 手动报溢按钮 */
+.btn-overflow-small {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: white !important;
+  border-radius: 30rpx;
+  padding: 8rpx 20rpx;
+  font-size: 23rpx;
+  font-weight: bold;
+  border: 2rpx solid rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+  flex-shrink: 0;
+  width: auto !important;
+  display: inline-block;
+}
+
+.btn-overflow-small:active {
+  background: rgba(255, 255, 255, 0.4);
+}
+
 /* 重新开始按钮 - 右上角小型按钮 */
 .btn-restart-small {
   background: rgba(255, 243, 224, 0.95) !important;
@@ -1020,4 +1047,61 @@
 
 .btn-confirm:active {
   background: #4cae4c;
+}
+
+/* ===== 提交成功浮层 ===== */
+.success-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 3000;
+  animation: fadeIn 0.2s ease;
+}
+
+.success-card {
+  background: white;
+  border-radius: 24rpx;
+  padding: 60rpx 80rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.15);
+  animation: popIn 0.3s ease;
+}
+
+.success-check {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: #5cb85c;
+  color: white;
+  font-size: 64rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.success-msg {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #5cb85c;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }

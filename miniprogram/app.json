@@ -4,7 +4,8 @@
     "pages/login/login",
     "pages/scan/scan",
     "pages/detail/detail",
-    "pages/stock-check/stock-check"
+    "pages/stock-check/stock-check",
+    "pages/manual-overflow/manual-overflow"
   ],
   "window": {
     "backgroundColor": "#f0f9f0",

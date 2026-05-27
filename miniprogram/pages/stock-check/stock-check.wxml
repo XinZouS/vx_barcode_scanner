@@ -7,15 +7,24 @@
         <view class="title">扫码统计</view>
       </view>
 
-      <!-- 重新开始按钮 - 移到右上角 -->
-      <button
-        wx:if="{{progress.is_in_progress}}"
-        class="btn-restart-small"
-        size="mini"
-        bindtap="handleStartCheck"
-        disabled="{{startLoading}}"
-        loading="{{startLoading}}"
-      >重新开始</button>
+      <view class="header-btns">
+        <!-- 手动报溢 -->
+        <button
+          class="btn-overflow-small"
+          size="mini"
+          bindtap="goManualOverflow"
+        >手动报溢</button>
+
+        <!-- 重新开始按钮 -->
+        <button
+          wx:if="{{progress.is_in_progress}}"
+          class="btn-restart-small"
+          size="mini"
+          bindtap="handleStartCheck"
+          disabled="{{startLoading}}"
+          loading="{{startLoading}}"
+        >重新开始</button>
+      </view>
     </view>
 
     <!-- 进度展示 -->
@@ -305,5 +314,13 @@
         <button class="modal-btn btn-confirm" bindtap="submitCreateAllocation">确定</button>
       </view>
     </view>
+  </view>
+</view>
+
+<!-- 提交成功大勾提示 -->
+<view class="success-overlay" wx:if="{{showSuccessOverlay}}">
+  <view class="success-card">
+    <view class="success-check">✓</view>
+    <text class="success-msg">{{successOverlayMsg}}</text>
   </view>
 </view>

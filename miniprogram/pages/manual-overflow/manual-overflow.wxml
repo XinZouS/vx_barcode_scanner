@@ -1,0 +1,202 @@
+<!--pages/manual-overflow/manual-overflow.wxml-->
+<view class="container">
+  <!-- 报溢单选择器（点击展开卡片列表） -->
+  <view class="sheet-selector" bindtap="toggleSheetPicker">
+    <text class="sheet-label">指定报溢单</text>
+    <view class="sheet-picker">
+      <text wx:if="{{selectedSheetCreatetime}}" class="sheet-picker-text">{{selectedSheetCreatetime}}</text>
+      <text wx:else class="sheet-picker-placeholder">点击选择（不选将查询已有或新建）</text>
+      <view class="sheet-picker-arrow {{showSheetPicker ? 'arrow-up' : 'arrow-down'}}"></view>
+    </view>
+  </view>
+
+  <!-- 报溢单卡片列表（点开选择器后展示） -->
+  <view class="sheet-card-list" wx:if="{{showSheetPicker}}">
+    <scroll-view class="sheet-scroll" scroll-y>
+      <view
+        class="sheet-card-item {{selectedSheetId === item.id ? 'selected' : ''}}"
+        wx:for="{{sheetList}}"
+        wx:key="id"
+        bindtap="selectSheet"
+        data-index="{{index}}"
+      >
+        <text class="sheet-card-time">{{item.createtime}}</text>
+        <text class="sheet-card-type">库存报溢 · 新建单</text>
+      </view>
+      <view class="sheet-card-empty" wx:if="{{sheetList.length === 0 && !sheetListLoading}}">
+        <text>暂无报溢单</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 报溢单详情 table -->
+  <view class="sheet-detail" wx:if="{{selectedSheetId}}">
+    <view class="sheet-detail-header">
+      <view class="sheet-detail-left">
+        <text class="sheet-detail-title">商品明细</text>
+        <text class="sheet-detail-count">{{sheetGoodsList.length}} 种</text>
+      </view>
+      <view class="sheet-detail-toggle" bindtap="toggleSheetDetail">
+        <view class="toggle-arrow {{showSheetDetail ? 'arrow-up' : 'arrow-down'}}"></view>
+      </view>
+    </view>
+
+    <view wx:if="{{showSheetDetail}}">
+      <view class="sheet-goods-loading" wx:if="{{sheetGoodsLoading}}">
+        <view class="loading-spinner"></view>
+        <text class="loading-text">加载中...</text>
+      </view>
+
+      <scroll-view class="sheet-goods-list" scroll-y wx:elif="{{sheetGoodsList.length > 0}}">
+        <view class="sheet-goods-row" wx:for="{{sheetGoodsList}}" wx:key="id" bindtap="onSheetGoodsRowTap" data-item="{{item}}">
+          <view class="sg-col sg-name">
+            <text class="sg-name-text">{{item.name}}</text>
+            <text class="sg-spec">{{item.specification || '--'}}</text>
+          </view>
+          <view class="sg-col sg-qty">数量 {{item.quantity}}</view>
+          <view class="sg-col sg-batch">{{item.batch || '--'}}</view>
+        </view>
+      </scroll-view>
+
+      <view class="sheet-goods-empty" wx:elif="{{!sheetGoodsLoading}}">
+        <text>暂无商品</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 搜索区域（白色容器+阴影） -->
+  <view class="search-card">
+    <view class="search-input-wrap">
+      <input
+        class="search-input"
+        value="{{searchKey}}"
+        placeholder="条码、拼音、商品名"
+        bindinput="onSearchInput"
+        bindconfirm="doSearch"
+        confirm-type="search"
+      />
+      <view class="search-clear" wx:if="{{searchKey}}" bindtap="clearSearch">
+        <text>✕</text>
+      </view>
+    </view>
+    <view class="icon-btn search-btn-icon" bindtap="doSearch">
+      <view class="magnifier-icon">
+        <view class="magnifier-circle"></view>
+        <view class="magnifier-handle"></view>
+      </view>
+    </view>
+    <view class="icon-btn scan-btn" bindtap="handleScan">
+      <view class="scan-icon-btn">
+        <view class="scan-frame-line"></view>
+      </view>
+    </view>
+    <!-- 切换查询结果列表 -->
+    <view class="icon-btn toggle-btn {{showSearchResults ? '' : 'btn-inactive'}}" bindtap="toggleSearchResults">
+      <view class="menu-icon">
+        <view class="menu-line"></view>
+        <view class="menu-line"></view>
+        <view class="menu-line"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Loading -->
+  <view class="loading-section" wx:if="{{searchLoading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在查询...</text>
+  </view>
+
+  <!-- 搜索结果列表 -->
+  <view class="search-results" wx:if="{{searchResults.length > 0 && !selectedItem && !searchLoading && showSearchResults}}">
+    <view
+      class="result-item"
+      wx:for="{{searchResults}}"
+      wx:key="id"
+      bindtap="selectItem"
+      data-item="{{item}}"
+    >
+      <view class="result-info">
+        <view class="result-name-row">
+          <text class="result-name">{{item.name || '--'}}</text>
+        </view>
+        <view class="result-spec-row">
+          <text class="result-spec">{{item.specification || '--'}}</text>
+          <text class="result-id-text">ID：{{item.id}}</text>
+        </view>
+        <view class="result-meta-row">
+          <text class="result-meta">厂家:{{item.manufacturer || '--'}} · 条码:{{item.barcode || '--'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 未找到提示 -->
+  <view class="empty-state" wx:if="{{searchKey && searched && searchResults.length === 0 && !searchLoading && !selectedItem && showSearchResults}}">
+    <text class="empty-text">未找到</text>
+  </view>
+
+  <!-- 商品表单卡片 -->
+  <view class="goods-card" wx:if="{{selectedItem && !searchLoading}}">
+    <view class="card-title-wrap">
+      <view class="card-title">{{selectedItem.name || '--'}}（ID：{{selectedItem.id}}）</view>
+      <view class="card-close" bindtap="cancelEdit">✕</view>
+    </view>
+
+    <view class="goods-info-row">
+      <text class="info-label">规格</text>
+      <text class="info-value">{{selectedItem.specification || '--'}}</text>
+    </view>
+    <view class="goods-info-row">
+      <text class="info-label">生产厂家</text>
+      <text class="info-value">{{selectedItem.manufacturer || '--'}}</text>
+    </view>
+    <view class="goods-info-row">
+      <text class="info-label">批准文号</text>
+      <text class="info-value">{{selectedItem.approvalcode || '--'}}</text>
+    </view>
+
+    <view class="card-divider"></view>
+    <view class="form-section-title">填写报溢信息</view>
+
+    <view class="form-row">
+      <text class="form-label">批号 <text class="required">*</text></text>
+      <input class="form-input" value="{{formBatch}}" placeholder="输入批号" bindinput="onBatchInput" bindconfirm="onFormConfirm" data-field="batch" focus="{{focusBatch}}"/>
+    </view>
+    <view class="form-row">
+      <text class="form-label">数量 <text class="required">*</text></text>
+      <input class="form-input" value="{{formQuantity}}" placeholder="输入报溢数量" bindinput="onQuantityInput" bindblur="onQuantityBlur" bindconfirm="onFormConfirm" data-field="quantity" focus="{{focusQuantity}}"/>
+    </view>
+    <view class="form-row">
+      <text class="form-label">进价 <text class="required">*</text></text>
+      <input class="form-input" value="{{formCost}}" placeholder="输入单品进价" bindinput="onCostInput" bindblur="onCostBlur" bindconfirm="onFormConfirm" data-field="cost" focus="{{focusCost}}"/>
+    </view>
+    <view class="form-row">
+      <text class="form-label">生产日期 <text class="required">*</text></text>
+      <input class="form-input" value="{{formProductionDate}}" placeholder="如 20251027" bindinput="onProductionDateInput" bindblur="onProductionDateBlur" bindconfirm="onFormConfirm" data-field="productionDate" focus="{{focusProductionDate}}"/>
+    </view>
+    <view class="form-row">
+      <text class="form-label">有效期至 <text class="required">*</text></text>
+      <input class="form-input" value="{{formExpireDate}}" placeholder="如 20251027" bindinput="onExpireDateInput" bindblur="onExpireDateBlur" bindconfirm="onFormConfirm" data-field="expireDate" focus="{{focusExpireDate}}"/>
+    </view>
+
+    <view class="submit-wrap">
+      <button class="btn-cancel" wx:if="{{editingSheetGoodsId}}" bindtap="cancelEdit">取消</button>
+      <button class="btn-submit" bindtap="handleSubmit" loading="{{submitLoading}}" disabled="{{submitLoading}}">{{editingSheetGoodsId ? '保存' : '新增'}}</button>
+    </view>
+  </view>
+
+  <view class="spacer" wx:if="{{selectedItem && !searchLoading}}"></view>
+
+  <!-- 回到顶部浮动按钮 -->
+  <view class="back-top-fab" wx:if="{{showBackTop}}" bindtap="scrollToTop">
+    <text class="back-top-arrow">↑</text>
+  </view>
+</view>
+
+<!-- 成功浮层 -->
+<view class="success-overlay" wx:if="{{showSuccessOverlay}}">
+  <view class="success-card">
+    <view class="success-check">✓</view>
+    <text class="success-msg">报溢成功</text>
+  </view>
+</view>
