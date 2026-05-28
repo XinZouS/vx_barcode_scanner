@@ -90,6 +90,13 @@
         <view class="scan-frame-line"></view>
       </view>
     </view>
+    <!-- 连续扫码 toggle -->
+    <view class="scan-toggle-btn {{continuousScan ? 'scan-toggle-btn--on' : ''}}" bindtap="toggleContinuousScan">
+      <view class="loop-icon">
+        <view class="arrow arrow--top"></view>
+        <view class="arrow arrow--bottom"></view>
+      </view>
+    </view>
   </view>
 
   <!-- 指定货位（全局） -->

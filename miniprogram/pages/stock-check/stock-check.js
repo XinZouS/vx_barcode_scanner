@@ -34,6 +34,9 @@ Page({
     // 完成统计菜单
     showFinishMenu: false,
 
+    // 连续扫码 toggle
+    continuousScan: false,
+
     // 成功提示浮层
     showSuccessOverlay: false,
     successOverlayMsg: '',
@@ -432,6 +435,11 @@ Page({
       } else {
         this.setData({ currentItem: null, searchKey: '' })
       }
+
+      // 连续扫码：提交成功后自动打开扫码
+      if (this.data.continuousScan) {
+        setTimeout(() => { this.handleScan() }, 400)
+      }
     } catch (err) {
       this.showError(err)
     } finally {
@@ -453,6 +461,20 @@ Page({
    */
   hideFinishMenu() {
     this.setData({ showFinishMenu: false })
+  },
+
+  /**
+   * 连续扫码 toggle：开启后提交成功自动打开扫码
+   */
+  toggleContinuousScan() {
+    const newVal = !this.data.continuousScan
+    this.setData({ continuousScan: newVal })
+    wx.vibrateShort({ type: 'light' })
+    wx.showToast({
+      title: newVal ? '连续扫码已开启' : '连续扫码已关闭',
+      icon: 'none',
+      duration: 1200
+    })
   },
 
   /**

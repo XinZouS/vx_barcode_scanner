@@ -209,14 +209,14 @@
 
 /* 扫码图标按钮 - 统一用细线条风格 */
 .scan-icon-btn {
-  width: 48rpx;
-  height: 48rpx;
+  width: 32rpx;
+  height: 32rpx;
   position: relative;
 }
 
 .scan-frame-line {
-  width: 44rpx;
-  height: 44rpx;
+  width: 28rpx;
+  height: 28rpx;
   border: 3rpx solid white;
   border-radius: 6rpx;
   position: absolute;
@@ -243,6 +243,95 @@
   50% {
     top: 80%;
   }
+}
+
+/* 连续扫码 toggle 按钮 */
+.scan-toggle-btn {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #d0d0d0;
+  transition: all 0.2s;
+}
+
+.scan-toggle-btn--on {
+  background: #67c23a;
+  box-shadow: 0 2rpx 8rpx rgba(103, 194, 58, 0.3);
+}
+
+.scan-toggle-btn:active {
+  opacity: 0.8;
+}
+
+/* 循环箭头 icon — 两个 ~160° 弧线 + 箭头 */
+.loop-icon {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  position: relative;
+  /* 两个白色 140° 扇区，各间隔 20° */
+  background: conic-gradient(
+    from 5deg,
+    #fff 0deg,
+    #fff 140deg,
+    transparent 140deg,
+    transparent 180deg,
+    #fff 180deg,
+    #fff 320deg,
+    transparent 320deg,
+    transparent 360deg
+  );
+  /* 挖空中心，2rpx 宽圆环 */
+  -webkit-mask: radial-gradient(circle, transparent 15rpx, #000 15rpx, #000 17rpx, transparent 18rpx);
+}
+
+/* 关闭态：弧线用灰色 */
+.scan-toggle-btn:not(.scan-toggle-btn--on) .loop-icon {
+  background: conic-gradient(
+    from 5deg,
+    #999 0deg,
+    #999 140deg,
+    transparent 140deg,
+    transparent 180deg,
+    #999 180deg,
+    #999 320deg,
+    transparent 340deg,
+    transparent 360deg
+  );
+}
+
+/* 箭头 — 2px 线段，与圆弧端点切向 */
+.arrow {
+  position: absolute;
+  width: 24rpx;
+  height: 3rpx;
+  border-radius: 2rpx;
+}
+
+/* 开启态白色箭头 */
+.scan-toggle-btn--on .arrow {
+  background: #fff;
+}
+
+/* 关闭态灰色箭头 */
+.scan-toggle-btn:not(.scan-toggle-btn--on) .arrow {
+  background: #999;
+}
+
+.arrow--top {
+  top: 1rpx;
+  right: 0rpx;
+  transform: rotate(-30deg);
+}
+
+.arrow--bottom {
+  bottom: 1rpx;
+  left: 0rpx;
+  transform: rotate(150deg);
 }
 
 /* 放大镜图标 */
