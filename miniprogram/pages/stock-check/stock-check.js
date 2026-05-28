@@ -20,23 +20,32 @@ Page({
     searched: false,
     searchResults: [],
     currentItem: null,
-    quantityDisplay: '',
+    quantityDisplay: '',      // 库存数量（quantity）
+    checkQuantityDisplay: '--',  // 已统计数量（check_quantity）
+    checkQtyClass: '',       // 颜色类：qty-red/qty-green/qty-yellow
     isItemExpired: false,
-    actualQty: '',
+    actualQty: '',           // 本次输入的实际清点数量
 
     // 提交相关
     startLoading: false,
     submitLoading: false,
+    finishLoading: false,
+
+    // 完成统计菜单
+    showFinishMenu: false,
 
     // 成功提示浮层
     showSuccessOverlay: false,
     successOverlayMsg: '',
 
-    // 计算属性
+    // 计算属性（对齐 Vue newDelta / checkQtyClass）
     computedDelta: null,
-    deltaClass: '',
+    deltaPreview: null,         // quantity - check_quantity - actualQty
+    deltaPreviewDisplay: '',    // 格式化后的预计差值显示
+    deltaClass: '',             // delta-loss / delta-overage / delta-ok
     submitBtnText: '提交统计结果',
     isChecked: false,
+    showAlreadyCheckedHint: false,  // 已盘==库存 但本次输入会改变已盘数量
 
     // 货位相关
     showAllocationDialog: false,
@@ -92,7 +101,7 @@ Page({
     }
   },
 
-  async handleStartCheck() {
+  async handleStartCheck(force = false) {
     const { progress, startLoading } = this.data
     if (startLoading) return
 
@@ -100,29 +109,38 @@ Page({
       ? `当前有统计进行中（已统计 ${progress.checked} 条，待统计 ${progress.unchecked} 条）。\n重新开始将重置所有物品为"待统计"状态，确认吗？`
       : '将把数量大于0的物品标记为待统计状态'
 
-    wx.showModal({
-      title: '开始统计',
-      content: confirmMsg,
-      confirmText: '确认',
-      cancelText: '取消',
-      success: async (res) => {
-        if (res.confirm) {
-          this.setData({ startLoading: true })
-          try {
-            const data = await request.post('/stock/checking/start/')
-            wx.showToast({
-              title: data.detail || '统计已开始',
-              icon: 'success'
-            })
-            await this.fetchProgress()
-          } catch (err) {
-            this.showError(err)
-          } finally {
-            this.setData({ startLoading: false })
+    const doStart = async () => {
+      this.setData({ startLoading: true })
+      try {
+        const data = await request.post('/stock/checking/start/')
+        wx.showToast({
+          title: data.detail || '统计已开始',
+          icon: 'success'
+        })
+        await this.fetchProgress()
+      } catch (err) {
+        this.showError(err)
+      } finally {
+        this.setData({ startLoading: false })
+      }
+    }
+
+    if (force) {
+      // 强制重启，不弹确认框
+      await doStart()
+    } else {
+      wx.showModal({
+        title: '开始统计',
+        content: confirmMsg,
+        confirmText: '确认',
+        cancelText: '取消',
+        success: async (res) => {
+          if (res.confirm) {
+            await doStart()
           }
         }
-      }
-    })
+      })
+    }
   },
 
   // ========== 扫码功能 ==========
@@ -168,12 +186,17 @@ Page({
       searchResults: [],
       currentItem: null,
       quantityDisplay: '',
+      checkQuantityDisplay: '--',
+      checkQtyClass: '',
       isItemExpired: false,
       actualQty: '',
       computedDelta: null,
+      deltaPreview: null,
+      deltaPreviewDisplay: '',
       deltaClass: '',
       submitBtnText: '提交统计结果',
-      isChecked: false
+      isChecked: false,
+      showAlreadyCheckedHint: false
     })
   },
 
@@ -212,18 +235,59 @@ Page({
     const item = itemOrEvent.currentTarget ? itemOrEvent.currentTarget.dataset.item : itemOrEvent
     if (!item) return
 
+    const checkQty = item.check_quantity != null ? parseFloat(item.check_quantity) : 0
+    const quantity = Number(item.quantity) || 0
+
+    // 颜色：0→灰色，<库存→红色，==→绿色，>→黄色（对齐 Vue checkQtyClass）
+    let checkQtyClass = ''
+    if (checkQty === 0) {
+      checkQtyClass = 'qty-gray'
+    } else if (checkQty < quantity) {
+      checkQtyClass = 'qty-red'
+    } else if (checkQty === quantity) {
+      checkQtyClass = 'qty-green'
+    } else {
+      checkQtyClass = 'qty-yellow'
+    }
+
+    // 自动填入剩余未盘数量：quantity - check_quantity（对齐 Vue）
+    const autoQty = quantity - checkQty
+    const actualQty = autoQty >= 0 ? String(autoQty) : String(autoQty)
+
+    // 已盘数量 == 库存时，提示用户
+    const showAlreadyCheckedHint = checkQty === quantity && quantity > 0
+
     this.setData({
       currentItem: item,
-      quantityDisplay: (Number(item.quantity) || 0).toString(),
+      quantityDisplay: quantity.toString(),
+      checkQuantityDisplay: checkQty.toString(),
+      checkQtyClass,
       isItemExpired: item.expire_date ? new Date(item.expire_date) < new Date() : false,
-      actualQty: (Number(item.quantity) || 0).toString(),
-      isChecked: item.ischecked === true
+      actualQty,
+      isChecked: item.ischecked === true,
+      showAlreadyCheckedHint
     })
+
+    // 自动填入后计算期望差值
     this.calculateDelta()
   },
 
   closeGoodsCard() {
-    this.setData({ currentItem: null })
+    this.setData({
+      currentItem: null,
+      quantityDisplay: '',
+      checkQuantityDisplay: '--',
+      checkQtyClass: '',
+      isItemExpired: false,
+      actualQty: '',
+      deltaPreview: null,
+      deltaPreviewDisplay: '',
+      deltaClass: '',
+      submitBtnText: '提交盘点结果',
+      isChecked: false,
+      showAlreadyCheckedHint: false,
+      searchKey: ''
+    })
   },
 
   // ========== 数量相关 ==========
@@ -251,25 +315,42 @@ Page({
   calculateDelta() {
     const { currentItem, actualQty } = this.data
     if (!currentItem || actualQty === '') {
-      this.setData({ computedDelta: null, deltaClass: '', submitBtnText: '提交统计结果' })
+      this.setData({
+        deltaPreview: null,
+        deltaPreviewDisplay: '',
+        deltaClass: '',
+        submitBtnText: '提交统计结果'
+      })
       return
     }
 
-    const delta = Number(currentItem.quantity) - Number(actualQty)
-    let deltaClass = '', submitBtnText = '提交统计结果'
+    const quantity = Number(currentItem.quantity) || 0
+    const checkQty = Number(currentItem.check_quantity) || 0
+    const actQty = Number(actualQty)
+    if (isNaN(actQty)) return
 
-    if (delta > 0) {
+    // 新公式（对齐 Vue newDelta）： quantity - check_quantity - actualQty
+    const deltaPreview = quantity - checkQty - actQty
+    const absDelta = Math.abs(deltaPreview)
+    let deltaClass = '', submitBtnText = '提交盘点结果'
+
+    if (deltaPreview > 0) {
       deltaClass = 'delta-loss'
-      submitBtnText = `提交报损（短缺 ${this.formatNum(delta)}）`
-    } else if (delta < 0) {
+      submitBtnText = '提交盘点结果（预计报损）'
+    } else if (deltaPreview < 0) {
       deltaClass = 'delta-overage'
-      submitBtnText = `提交报溢（溢出 ${this.formatNum(-delta)}）`
+      submitBtnText = '提交盘点结果（预计报溢）'
     } else {
       deltaClass = 'delta-ok'
-      submitBtnText = '✓ 数量相符 - 提交'
+      submitBtnText = '✓ 提交盘点结果'
     }
 
-    this.setData({ computedDelta: delta, deltaClass, submitBtnText })
+    this.setData({
+      deltaPreview,
+      deltaPreviewDisplay: absDelta > 0 ? this.formatNum(absDelta) : '0',
+      deltaClass,
+      submitBtnText
+    })
   },
 
   /**
@@ -286,7 +367,7 @@ Page({
   async handleSubmitCheck() {
     const { currentItem, actualQty, submitLoading } = this.data
     if (!currentItem || actualQty === '') {
-      wx.showToast({ title: '请输入实际数量', icon: 'none' })
+      wx.showToast({ title: '请输入本次清点数量', icon: 'none' })
       return
     }
     if (submitLoading) return
@@ -309,7 +390,17 @@ Page({
       }
 
       const result = await request.post('/stock/checking/submit/', payload)
-      const delta = Number(result.delta || 0)
+
+      // 更新 currentItem 的 check_quantity（从接口返回）
+      const newCheckQty = result.check_quantity != null ? String(result.check_quantity) : '0'
+      const quantity = Number(currentItem.quantity) || 0
+      const chkNum = parseFloat(newCheckQty) || 0
+
+      let checkQtyClass = ''
+      if (chkNum === 0) checkQtyClass = 'qty-gray'
+      else if (chkNum < quantity) checkQtyClass = 'qty-red'
+      else if (chkNum === quantity) checkQtyClass = 'qty-green'
+      else checkQtyClass = 'qty-yellow'
 
       wx.vibrateShort({ type: 'medium' })
       setTimeout(() => { wx.vibrateShort({ type: 'medium' }) }, 100)
@@ -318,32 +409,29 @@ Page({
       const { searchResults } = this.data
       const updatedResults = searchResults.map(item => {
         if (item.id === currentItem.id) {
-          return { ...item, ischecked: true }
+          return { ...item, ischecked: true, check_quantity: newCheckQty }
         }
         return item
       })
       this.setData({ searchResults: updatedResults })
 
-      // 构建成功提示文案
-      let msg = '数量相符 ✓'
-      if (delta > 0) msg = `报损 ${this.formatNum(delta)} ✓`
-      else if (delta < 0) msg = `报溢 ${this.formatNum(-delta)} ✓`
-
-      // 显示大勾成功浮层
-      this.showLargeSuccess(msg)
+      // 成功提示
+      if (chkNum === quantity) {
+        this.showLargeSuccess('数量相符 ✓')
+      } else if (chkNum < quantity) {
+        this.showLargeSuccess(`已盘 ${newCheckQty}`)
+      } else {
+        this.showLargeSuccess(`已盘 ${newCheckQty}，超出库存`)
+      }
 
       await this.fetchProgress()
-      this.setData({
-        currentItem: null,
-        quantityDisplay: '',
-        isItemExpired: false,
-        actualQty: '',
-        computedDelta: null,
-        deltaClass: '',
-        submitBtnText: '提交统计结果',
-        isChecked: false,
-        searchKey: ''
-      })
+
+      // 如果有搜索结果列表，保留列表；否则清空回到 placeholder
+      if (this.data.searchResults.length > 0) {
+        this.setData({ currentItem: null })
+      } else {
+        this.setData({ currentItem: null, searchKey: '' })
+      }
     } catch (err) {
       this.showError(err)
     } finally {
@@ -351,7 +439,59 @@ Page({
     }
   },
 
-  // ========== 货位相关 ==========
+  // ========== 完成统计相关 ==========
+
+  /**
+   * 显示完成统计/重新开始 菜单
+   */
+  showFinishMenu() {
+    this.setData({ showFinishMenu: true })
+  },
+
+  /**
+   * 隐藏菜单
+   */
+  hideFinishMenu() {
+    this.setData({ showFinishMenu: false })
+  },
+
+  /**
+   * 强制重新开始（跳过完成统计）
+   */
+  handleForceRestart() {
+    this.hideFinishMenu()
+    this.handleStartCheck(true)
+  },
+
+  /**
+   * 完成统计：弹窗确认后调用 finish/ 接口
+   */
+  handleFinishCheck() {
+    wx.showModal({
+      title: '完成统计',
+      content: '将完成本次统计并清算物品数量差异，自动生成报损报溢单，需要人工审核后手动提交。\n确认完成统计吗？',
+      confirmText: '确认',
+      cancelText: '取消',
+      success: async (res) => {
+        if (res.confirm) {
+          this.setData({ finishLoading: true, showFinishMenu: false })
+          try {
+            const data = await request.post('/stock/checking/finish/')
+            wx.showToast({
+              title: data.detail || '统计已完成',
+              icon: 'success',
+              duration: 3000
+            })
+            await this.fetchProgress()
+          } catch (err) {
+            this.showError(err)
+          } finally {
+            this.setData({ finishLoading: false })
+          }
+        }
+      }
+    })
+  },
 
   /**
    * 打开货位弹窗（指定货位 + 当前货位 共用）

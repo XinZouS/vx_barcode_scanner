@@ -136,7 +136,7 @@
   </view>
 
   <!-- 商品表单卡片 -->
-  <view class="goods-card" wx:if="{{selectedItem && !searchLoading}}">
+  <view class="goods-card {{keyboardUp ? 'keyboard-up' : ''}}" wx:if="{{selectedItem && !searchLoading}}">
     <view class="card-title-wrap">
       <view class="card-title">{{selectedItem.name || '--'}}（ID：{{selectedItem.id}}）</view>
       <view class="card-close" bindtap="cancelEdit">✕</view>
@@ -159,24 +159,28 @@
     <view class="form-section-title">填写报溢信息</view>
 
     <view class="form-row">
-      <text class="form-label">批号 <text class="required">*</text></text>
-      <input class="form-input" value="{{formBatch}}" placeholder="输入批号" bindinput="onBatchInput" bindconfirm="onFormConfirm" data-field="batch" focus="{{focusBatch}}"/>
-    </view>
-    <view class="form-row">
       <text class="form-label">数量 <text class="required">*</text></text>
-      <input class="form-input" value="{{formQuantity}}" placeholder="输入报溢数量" bindinput="onQuantityInput" bindblur="onQuantityBlur" bindconfirm="onFormConfirm" data-field="quantity" focus="{{focusQuantity}}"/>
+      <view class="qty-wrap">
+        <view class="qty-btn {{quantityMinusDisabled ? 'qty-btn-disabled' : ''}}" bindtap="onQuantityMinus">-</view>
+        <input class="form-input qty-input" value="{{formQuantity}}" placeholder="输入报溢数量" bindinput="onQuantityInput" bindblur="onQuantityBlur" bindconfirm="onFormConfirm" data-field="quantity" focus="{{focusQuantity}}" adjust-position="{{false}}"/>
+        <view class="qty-btn" bindtap="onQuantityPlus">+</view>
+      </view>
     </view>
     <view class="form-row">
       <text class="form-label">进价 <text class="required">*</text></text>
-      <input class="form-input" value="{{formCost}}" placeholder="输入单品进价" bindinput="onCostInput" bindblur="onCostBlur" bindconfirm="onFormConfirm" data-field="cost" focus="{{focusCost}}"/>
+      <input class="form-input" value="{{formCost}}" placeholder="输入单品进价" bindinput="onCostInput" bindblur="onCostBlur" bindconfirm="onFormConfirm" data-field="cost" focus="{{focusCost}}" adjust-position="{{false}}"/>
+    </view>
+    <view class="form-row">
+      <text class="form-label">批号 <text class="required">*</text></text>
+      <input class="form-input" value="{{formBatch}}" placeholder="输入批号" bindinput="onBatchInput" bindconfirm="onFormConfirm" data-field="batch" focus="{{focusBatch}}" adjust-position="{{false}}"/>
     </view>
     <view class="form-row">
       <text class="form-label">生产日期 <text class="required">*</text></text>
-      <input class="form-input" value="{{formProductionDate}}" placeholder="如 20251027" bindinput="onProductionDateInput" bindblur="onProductionDateBlur" bindconfirm="onFormConfirm" data-field="productionDate" focus="{{focusProductionDate}}"/>
+      <input class="form-input" value="{{formProductionDate}}" placeholder="如 20251027" bindinput="onProductionDateInput" bindblur="onProductionDateBlur" bindconfirm="onFormConfirm" data-field="productionDate" focus="{{focusProductionDate}}" adjust-position="{{false}}"/>
     </view>
     <view class="form-row">
       <text class="form-label">有效期至 <text class="required">*</text></text>
-      <input class="form-input" value="{{formExpireDate}}" placeholder="如 20251027" bindinput="onExpireDateInput" bindblur="onExpireDateBlur" bindconfirm="onFormConfirm" data-field="expireDate" focus="{{focusExpireDate}}"/>
+      <input class="form-input" value="{{formExpireDate}}" placeholder="如 20251027" bindinput="onExpireDateInput" bindblur="onExpireDateBlur" bindconfirm="onFormConfirm" data-field="expireDate" focus="{{focusExpireDate}}" adjust-position="{{false}}"/>
     </view>
 
     <view class="submit-wrap">

@@ -15,16 +15,25 @@
           bindtap="goManualOverflow"
         >手动报溢</button>
 
-        <!-- 重新开始按钮 -->
+        <!-- 重新开始按钮（进行中时显示菜单） -->
         <button
           wx:if="{{progress.is_in_progress}}"
           class="btn-restart-small"
           size="mini"
-          bindtap="handleStartCheck"
+          bindtap="showFinishMenu"
           disabled="{{startLoading}}"
           loading="{{startLoading}}"
         >重新开始</button>
       </view>
+    </view>
+
+    <!-- 完成统计/重新开始 菜单 -->
+    <view class="finish-menu-card card" wx:if="{{showFinishMenu}}">
+      <view class="finish-menu-title">盘点进行中</view>
+      <view class="finish-menu-desc">请选择操作</view>
+      <button class="btn-finish" bindtap="handleFinishCheck" disabled="{{finishLoading}}" loading="{{finishLoading}}">完成统计</button>
+      <button class="btn-restart-confirm" bindtap="handleForceRestart">重新开始</button>
+      <button class="btn-cancel-menu" bindtap="hideFinishMenu">取消</button>
     </view>
 
     <!-- 进度展示 -->
@@ -130,20 +139,26 @@
         <view class="result-meta-row">
           <text class="result-meta">批号:{{item.batch || '--'}} · 数量：</text>
           <text class="result-qty">{{item.quantity || 0}}</text>
+          <text class="result-checked" style="margin-left:auto;color:{{(item.quantity || 0) == (item.check_quantity || 0) ? '#67c23a' : ((item.quantity || 0) > (item.check_quantity || 0) ? '#f56c6c' : '#e6a23c')}}">· 已记录：{{item.check_quantity || 0}}</text>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 物品信息卡片 -->
+  <!-- 物品信息卡片 — 对齐 Vue StockCheck.vue 展示风格 -->
   <view class="goods-card card" wx:if="{{currentItem && !searchLoading}}">
     <!-- 名称作为卡片标题 -->
     <view class="card-title-wrap">
       <view class="card-title-row">
+        <text wx:if="{{currentItem.ischecked === true}}" class="card-status-tag status--checked">已记录</text>
+        <text wx:elif="{{currentItem.ischecked === false}}" class="card-status-tag status--unchecked">待记录</text>
+        <text wx:else class="card-status-tag status--null">未记录</text>
         <text class="card-title">{{currentItem.name || '--'}}（ID：{{currentItem.info}}）</text>
       </view>
       <view class="card-close" bindtap="closeGoodsCard">✕</view>
     </view>
+
+    <!-- 基础信息 row -->
     <view class="goods-info-row">
       <text class="info-label">规格</text>
       <text class="info-value">{{currentItem.specification || '--'}}</text>
@@ -158,69 +173,98 @@
     </view>
     <view class="goods-info-row">
       <text class="info-label">有效期至</text>
-      <view class="info-value" style="display:flex;align-items:center;justify-content:flex-end;gap:8rpx;">
+      <view class="info-value info-value-row">
         <text class="{{isItemExpired ? 'text-danger' : ''}}">{{currentItem.expire_date || '--'}}</text>
         <text class="tag-danger" wx:if="{{isItemExpired}}">已过期</text>
       </view>
     </view>
-    <!-- 记录状态 -->
     <view class="goods-info-row">
-      <text class="info-label">状态</text>
-      <view class="info-value" style="display:flex;align-items:center;justify-content:flex-end;">
-        <view wx:if="{{currentItem.ischecked === true}}" class="status-tag status-checked">已记录</view>
-        <view wx:elif="{{currentItem.ischecked === false}}" class="status-tag status-unchecked">待记录</view>
-        <view wx:else class="status-tag status-unknown">未记录</view>
-      </view>
-    </view>
-    <!-- 当前货位行：展示物品自己的货位，点击可设置全局指定货位 -->
-    <view class="goods-info-row allocation-row" bindtap="openAllocationDialog">
-      <text class="info-label">当前货位</text>
-      <view class="info-value allocation-value">
-        <text wx:if="{{currentItem.allocation_name}}" class="allocation-text">{{currentItem.allocation_name}}</text>
-        <text wx:elif="{{specifiedAllocationName}}" class="allocation-text">由：{{currentItem.allocation_name || '(空货位)'}} 更新为：{{specifiedAllocationName}}</text>
-        <text wx:else class="allocation-placeholder">点击设置货位</text>
-        <text class="arrow-right">›</text>
-      </view>
+      <text class="info-label">货位</text>
+      <text class="info-value allocation-link" bindtap="openAllocationDialog">{{currentItem.allocation_name || '未设置'}} ›</text>
     </view>
 
-    <!-- 数量对比 - 4:6 布局 -->
-    <view class="qty-compare">
-      <view class="qty-box qty-record">
-        <text class="qty-label">记录数量</text>
-        <text class="qty-value">{{quantityDisplay}}</text>
+    <!-- 绿色分隔线 — 对齐 Vue card-divider -->
+    <view class="card-divider"></view>
+
+    <!-- 数量四段流：记录库存 — 已盘数量 + 本次增加 = 预计差值 -->
+    <view class="qty-flow">
+      <!-- Row 1：记录库存 — 已盘数量 -->
+      <view class="qty-flow-row">
+        <view class="qty-flow-box">
+          <text class="qty-flow-label">记录库存</text>
+          <text class="qty-flow-value qty-flow-value--big qty-flow-value--record">{{quantityDisplay}}</text>
+        </view>
+        <text class="qty-flow-arrow">—</text>
+        <view class="qty-flow-box">
+          <text class="qty-flow-label">已盘数量</text>
+          <text class="qty-flow-value qty-flow-value--big {{checkQtyClass}}">{{checkQuantityDisplay}}</text>
+        </view>
       </view>
 
-      <view class="qty-box qty-actual">
-        <text class="qty-label">实际数量</text>
-        <view class="qty-input-wrap">
-          <view class="qty-btn-minus" bindtap="onQtyMinus">-</view>
-          <input
-            class="qty-input {{deltaClass}}"
-            type="digit"
-            value="{{actualQty}}"
-            placeholder="输入实际数量"
-            bindinput="onActualQtyInput"
-            bindconfirm="handleSubmitCheck"
-            adjust-position="{{true}}"
-          />
-          <view class="qty-btn-plus" bindtap="onQtyPlus">+</view>
+      <!-- Row 2：本次增加 + 预计差值 -->
+      <view class="qty-flow-row qty-flow-row--input">
+        <text class="qty-flow-arrow">+</text>
+        <view class="qty-flow-box qty-flow-box--input">
+          <text class="qty-flow-label">本次增加</text>
+          <view class="qty-flow-input-wrap">
+            <view class="qty-btn-minus" bindtap="onQtyMinus">-</view>
+            <input
+              class="qty-flow-input {{deltaClass}}"
+              type="digit"
+              value="{{actualQty}}"
+              placeholder="可填负数"
+              bindinput="onActualQtyInput"
+              bindconfirm="handleSubmitCheck"
+              adjust-position="{{true}}"
+            />
+            <view class="qty-btn-plus" bindtap="onQtyPlus">+</view>
+          </view>
+        </view>
+        <text class="qty-flow-arrow">=</text>
+        <view class="qty-flow-box qty-flow-box--delta">
+          <text class="qty-flow-label">预计差值</text>
+          <!-- 未输入时不显示 -->
+          <block wx:if="{{actualQty === ''}}">
+            <text class="qty-flow-value qty-flow-value--muted">—</text>
+          </block>
+          <!-- 报损 -->
+          <block wx:elif="{{deltaPreview > 0}}">
+            <text class="qty-flow-value qty-flow-value--big delta-loss">▼ {{deltaPreviewDisplay}}</text>
+            <text class="delta-tag delta-tag--loss">预计报损</text>
+          </block>
+          <!-- 报溢 -->
+          <block wx:elif="{{deltaPreview < 0}}">
+            <text class="qty-flow-value qty-flow-value--big delta-overage">▲ {{deltaPreviewDisplay}}</text>
+            <text class="delta-tag delta-tag--overflow">预计报溢</text>
+          </block>
+          <!-- 相符 -->
+          <block wx:else>
+            <text class="qty-flow-value qty-flow-value--big delta-ok">✓ 相符</text>
+          </block>
         </view>
       </view>
     </view>
 
-    <!-- 提交按钮 - 固定在底部，动态显示状态 -->
-    <view class="submit-wrap">
+    <!-- 已盘数量相符 + 修改提示 — 对齐 Vue already-checked-hint -->
+    <view class="already-checked-hint" wx:if="{{showAlreadyCheckedHint && actualQty !== ''}}">
+      <view wx:if="{{deltaPreview > 0}}" class="hint-box hint-box--loss">
+        <text>⚠ 已盘数量与库存相符，继续提交将扣减已盘数量，确认修改？</text>
+      </view>
+      <view wx:elif="{{deltaPreview < 0}}" class="hint-box hint-box--overflow">
+        <text>⚠ 已盘数量与库存相符，继续提交将增加已盘数量，确认修改？</text>
+      </view>
+    </view>
+
+    <!-- 提交按钮 — 全宽内联 -->
+    <view class="submit-area">
       <button
         class="btn-submit {{deltaClass}}"
         bindtap="handleSubmitCheck"
         disabled="{{submitLoading || actualQty === ''}}"
         loading="{{submitLoading}}"
-      >{{submitBtnText}}</button>
+      >提交盘点结果</button>
     </view>
   </view>
-
-  <!-- 透明占位：撑开底部空间，让卡片可上滑不被固定按钮遮挡 -->
-  <view class="spacer" wx:if="{{currentItem && !searchLoading}}"></view>
 
   <!-- 未找到提示 - 仅在有搜索关键词时显示 -->
   <view class="empty-state" wx:if="{{searchKey && searched && !currentItem && searchResults.length === 0 && !searchLoading}}">

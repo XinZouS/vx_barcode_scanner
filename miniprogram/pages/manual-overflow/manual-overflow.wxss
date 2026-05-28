@@ -497,6 +497,11 @@
   border-radius: 16rpx;
   padding: 30rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.goods-card.keyboard-up {
+  transform: translateY(-600rpx);
 }
 
 .card-title-wrap {
@@ -601,6 +606,60 @@
   font-size: 28rpx;
   color: #333;
   box-sizing: border-box;
+}
+
+/* ===== 数量加减按钮 ===== */
+.qty-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.qty-btn {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+  color: #333;
+  font-size: 40rpx;
+  font-weight: bold;
+  line-height: 1;
+  flex-shrink: 0;
+  border: 2rpx solid #e2e8f0;
+  box-sizing: border-box;
+}
+
+.qty-btn:first-child {
+  border-radius: 10rpx 0 0 10rpx;
+  border-right: none;
+}
+
+.qty-btn:last-child {
+  border-radius: 0 10rpx 10rpx 0;
+  border-left: none;
+}
+
+.qty-btn:active {
+  background: #dcdcdc;
+}
+
+.qty-btn-disabled {
+  color: #c0c0c0;
+  background: #fafafa;
+}
+
+.qty-btn-disabled:active {
+  background: #fafafa;
+}
+
+.qty-input {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  text-align: center;
 }
 
 /* ===== 提交按钮 ===== */

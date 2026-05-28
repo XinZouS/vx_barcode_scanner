@@ -316,7 +316,7 @@
 
 .result-item {
   padding: 25rpx 30rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid #d0d0d0;
 }
 
 .result-item:last-child {
@@ -447,6 +447,31 @@
   line-height: 1.4;
 }
 
+/* 卡片标题前的盘点状态 tag */
+.card-status-tag {
+  font-size: 32rpx;
+  padding: 6rpx 18rpx;
+  border-radius: 6rpx;
+  font-weight: 600;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.status--checked {
+  background: rgba(103, 194, 58, 0.15);
+  color: #67c23a;
+}
+
+.status--unchecked {
+  background: rgba(230, 162, 60, 0.15);
+  color: #e6a23c;
+}
+
+.status--null {
+  background: #f0f0f0;
+  color: #999;
+}
+
 .card-title-wrap {
   display: flex;
   justify-content: space-between;
@@ -512,103 +537,162 @@
   margin-left: 10rpx;
 }
 
-/* 数量对比 - 4:6 布局 */
-.qty-compare {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  margin-bottom: 30rpx;
+/* ─── 绿色分隔线 — 对齐 Vue card-divider ─── */
+.card-divider {
+  height: 0;
+  border-top: 3rpx solid #5cb85c;
+  margin: 16rpx 0;
+  border-radius: 2rpx;
 }
 
-.qty-box {
+/* ─── 数量四段流容器 ─── */
+.qty-flow {
+  margin: 4rpx 0 8rpx;
+}
+
+.qty-flow-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 14rpx;
+}
+
+.qty-flow-row--input {
+  align-items: flex-start;
+}
+
+/* 数量流方块 */
+.qty-flow-box {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10rpx;
+  gap: 6rpx;
+  flex: 1;
+  min-width: 80rpx;
 }
 
-.qty-record {
-  flex: 4;
+.qty-flow-box--input {
+  flex: 2;
 }
 
-.qty-actual {
-  flex: 6;
+.qty-flow-box--delta {
+  flex: 1.2;
 }
 
-.qty-label {
+.qty-flow-label {
   font-size: 28rpx;
   color: #999;
 }
 
-.qty-value {
-  font-size: 48rpx;
-  font-weight: bold;
+.qty-flow-value {
+  font-size: 34rpx;
+  font-weight: 700;
   color: #333;
+  line-height: 1;
 }
 
-.qty-input {
+.qty-flow-value--big {
+  font-size: 42rpx;
+}
+
+.qty-flow-value--record {
+  color: #1989fa;
+}
+
+.qty-flow-value--muted {
+  color: #888;
+  font-size: 42rpx;
+}
+
+.qty-flow-arrow {
+  font-size: 52rpx;
+  color: #888;
+  align-self: center;
+  flex-shrink: 0;
+  padding-bottom: 30rpx;  /* 对齐上方的 label 高度 */
+}
+
+/* 已盘数量颜色 */
+.qty-red {
+  color: #f56c6c !important;
+}
+
+.qty-green {
+  color: #67c23a !important;
+}
+
+.qty-yellow {
+  color: #e6a23c !important;
+}
+
+.qty-gray {
+  color: #c0c4cc !important;
+}
+
+/* 本次增加输入 */
+.qty-flow-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.qty-flow-input {
   flex: 1;
   text-align: center;
-  font-size: 48rpx;
-  font-weight: bold;
+  font-size: 42rpx;
+  font-weight: 700;
   color: #5cb85c;
   border-bottom: 4rpx solid #5cb85c;
-  padding: 10rpx 0;
+  padding: 8rpx 0;
+  min-width: 100rpx;
   transition: all 0.3s;
 }
 
-/* 实际数量 input 颜色随状态变化 */
-.qty-input.delta-ok {
+.qty-flow-input.delta-ok {
   color: #5cb85c;
   border-bottom-color: #5cb85c;
   background: rgba(92, 184, 92, 0.08);
   border-radius: 8rpx 8rpx 0 0;
 }
 
-.qty-input.delta-loss {
-  color: #fa5151;
-  border-bottom-color: #fa5151;
-  background: rgba(250, 81, 81, 0.08);
+.qty-flow-input.delta-loss {
+  color: #f56c6c;
+  border-bottom-color: #f56c6c;
+  background: rgba(245, 108, 108, 0.08);
   border-radius: 8rpx 8rpx 0 0;
 }
 
-.qty-input.delta-overage {
-  color: #E6A23C;
-  border-bottom-color: #E6A23C;
+.qty-flow-input.delta-overage {
+  color: #e6a23c;
+  border-bottom-color: #e6a23c;
   background: rgba(230, 162, 60, 0.08);
   border-radius: 8rpx 8rpx 0 0;
 }
 
-.qty-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-}
-
 .qty-btn-minus,
 .qty-btn-plus {
-  width: 60rpx;
-  height: 60rpx;
+  width: 56rpx;
+  height: 56rpx;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 41rpx;  /* 加大5号：36→41 */
+  font-size: 38rpx;
   font-weight: bold;
   flex-shrink: 0;
 }
 
 .qty-btn-minus {
-  background: #fa5151;  /* 改为红色 */
+  background: #f56c6c;
   color: white;
 }
 
 .qty-btn-minus:active {
-  background: #e04040;  /* 深红色按下效果 */
+  background: #e04040;
 }
 
 .qty-btn-plus {
-  background: #5cb85c;
+  background: #67c23a;
   color: white;
 }
 
@@ -616,102 +700,126 @@
   background: #4cae4c;
 }
 
-.qty-arrow {
-  font-size: 40rpx;
-  color: #999;
-}
-
-/* 差值显示 */
-.delta-box {
-  text-align: center;
-  padding: 20rpx;
-  border-radius: 12rpx;
-  font-size: 30rpx;
-  font-weight: bold;
-  margin-bottom: 30rpx;
-}
-
+/* 差值颜色 */
 .delta-loss {
-  background: #fff0f0;
-  color: #fa5151;
+  color: #f56c6c !important;
 }
 
 .delta-overage {
-  background: #fdf6ec;
-  color: #E6A23C;
+  color: #e6a23c !important;
 }
 
 .delta-ok {
-  background: #e8f5e8;
-  color: #5cb85c;
+  color: #67c23a !important;
 }
 
-/* 提交按钮容器 - 固定在底部 */
-.submit-wrap {
-  position: fixed;
-  bottom: 0;
-  left: 30rpx;
-  width: calc(100vw - 60rpx);
-  padding: 20rpx 0;
-  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  background: white;
-  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.05);
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  box-sizing: border-box;
+/* 差值 tag */
+.delta-tag {
+  font-size: 26rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 20rpx;
+  font-weight: 600;
 }
 
-/* 提交按钮 - 基础样式 */
-.btn-submit {
-  flex: 1;
-  padding: 25rpx 0;
+.delta-tag--loss {
+  background: rgba(245, 108, 108, 0.15);
+  color: #f56c6c;
+}
+
+.delta-tag--overflow {
+  background: rgba(230, 162, 60, 0.15);
+  color: #e6a23c;
+}
+
+/* 已盘修改提示 — 对齐 Vue already-checked-hint */
+.already-checked-hint {
+  margin-bottom: 14rpx;
+}
+
+.hint-box {
+  padding: 16rpx 20rpx;
+  border-radius: 10rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.hint-box--loss {
+  background: rgba(245, 108, 108, 0.08);
+  color: #f56c6c;
+  border-left: 4rpx solid #f56c6c;
+}
+
+.hint-box--overflow {
+  background: rgba(230, 162, 60, 0.08);
+  color: #e6a23c;
+  border-left: 4rpx solid #e6a23c;
+}
+
+/* ─── 提交区域 — 内联全宽 ─── */
+.submit-area {
+  margin-top: 30rpx;
+}
+
+.submit-area .btn-submit {
+  width: 100%;
+  padding: 24rpx 0;
   text-align: center;
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: bold;
   border-radius: 50rpx;
   border: none;
   transition: all 0.3s;
-  margin: 0;
 }
 
-/* 数量相符 - 淡绿色 */
-.btn-submit.delta-ok {
-  background: rgba(92, 184, 92, 0.2);
-  color: #5cb85c;
-  border: 2rpx solid #5cb85c;
+.submit-area .btn-submit.delta-ok {
+  background: rgba(103, 194, 58, 0.15);
+  color: #67c23a;
+  border: 2rpx solid #67c23a;
 }
 
-/* 报损 - 淡红色 */
-.btn-submit.delta-loss {
-  background: rgba(250, 81, 81, 0.15);
-  color: #fa5151;
-  border: 2rpx solid #fa5151;
+.submit-area .btn-submit.delta-loss {
+  background: rgba(245, 108, 108, 0.12);
+  color: #f56c6c;
+  border: 2rpx solid #f56c6c;
 }
 
-/* 报溢 - 淡黄色（警告） */
-.btn-submit.delta-overage {
-  background: rgba(230, 162, 60, 0.15);
-  color: #E6A23C;
-  border: 2rpx solid #E6A23C;
+.submit-area .btn-submit.delta-overage {
+  background: rgba(230, 162, 60, 0.12);
+  color: #e6a23c;
+  border: 2rpx solid #e6a23c;
 }
 
-.btn-submit:active {
+.submit-area .btn-submit:active {
   opacity: 0.8;
 }
 
-.btn-submit[disabled] {
-  background: #f5f5f5;
-  color: #999;
-  border-color: #e0e0e0;
+.submit-area .btn-submit[disabled] {
+  background: #f5f5f5 !important;
+  color: #999 !important;
+  border-color: #e0e0e0 !important;
 }
 
-/* 透明占位块：撑开底部，避免固定按钮遮挡上方内容 */
-.spacer {
-  height: 180rpx;
+/* 等宽字体 */
+.mono {
+  font-family: 'Courier New', monospace;
 }
 
-/* 空状态 - 复用 index 页面样式 */
+/* 货位可点击链接 */
+.allocation-link {
+  color: #1989fa;
+  font-size: 28rpx;
+  font-weight: bold;
+}
+
+/* info-value row（有效期行） */
+.info-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8rpx;
+}
+
+/* ─── 绿色分隔线 — 对齐 Vue card-divider ─── */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -1104,4 +1212,81 @@
 @keyframes popIn {
   from { transform: scale(0.8); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
+}
+
+/* 完成统计菜单卡片 */
+.finish-menu-card {
+  margin: 20rpx 30rpx;
+  padding: 30rpx;
+  background: white;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.finish-menu-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.finish-menu-desc {
+  font-size: 26rpx;
+  color: #999;
+  margin-bottom: 30rpx;
+}
+
+.btn-finish {
+  background: #5cb85c !important;
+  color: white !important;
+  border-radius: 50rpx;
+  padding: 20rpx 0;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: bold;
+  box-shadow: 0 4rpx 12rpx rgba(92, 184, 92, 0.3);
+  margin-bottom: 20rpx;
+  width: 100%;
+  border: none;
+  line-height: 1.5;
+}
+
+.btn-finish:active {
+  background: #4cae4c !important;
+}
+
+.btn-restart-confirm {
+  background: rgba(255, 243, 224, 0.95) !important;
+  color: #ff8c00 !important;
+  border-radius: 50rpx;
+  padding: 20rpx 0;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: bold;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  margin-bottom: 20rpx;
+  width: 100%;
+  border: none;
+  line-height: 1.5;
+}
+
+.btn-restart-confirm:active {
+  background: rgba(255, 243, 224, 0.8) !important;
+}
+
+.btn-cancel-menu {
+  background: #f5f5f5 !important;
+  color: #666 !important;
+  border-radius: 50rpx;
+  padding: 20rpx 0;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: bold;
+  width: 100%;
+  border: none;
+  line-height: 1.5;
+}
+
+.btn-cancel-menu:active {
+  background: #e0e0e0 !important;
 }

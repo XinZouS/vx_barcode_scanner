@@ -35,6 +35,9 @@ Page({
     formProductionDate: '',
     formExpireDate: '',
 
+    // 数量加减按钮状态
+    quantityMinusDisabled: true,
+
     // 当前页面滚动位置
     currentScrollTop: 0,
 
@@ -42,9 +45,9 @@ Page({
     submitLoading: false,
     showSuccessOverlay: false,
 
-    // 键盘适配
+    // 键盘适配：仅推起表单卡片，不滚动整个页面
     keyboardHeight: 0,
-    _scrollTopBeforeKeyboard: 0,  // 键盘弹出前的滚动位置
+    keyboardUp: false,
 
     // 表单 input focus 状态（用于回车切换焦点）
     focusBatch: false,
@@ -86,47 +89,16 @@ Page({
 
   /**
    * 监听键盘高度变化
+   * 仅推起表单卡片，不滚动整个页面，避免动画抖动
    */
   _setupKeyboardListener() {
     if (!wx.onKeyboardHeightChange) return
 
-    let timer = null
     wx.onKeyboardHeightChange((res) => {
-      const height = res.height
-      this.setData({ keyboardHeight: height })
-
-      if (height > 0) {
-        // 键盘弹出：记录当前滚动位置，然后滚动让表单标题到达页面顶部
-        this._scrollTopBeforeKeyboard = this.data.currentScrollTop || 0
-        clearTimeout(timer)
-        // 延迟执行，等待键盘动画完成
-        timer = setTimeout(() => {
-          this._scrollToFormTitle()
-        }, 350)
-      } else {
-        // 键盘收起：恢复原来的滚动位置
-        clearTimeout(timer)
-        const prev = this._scrollTopBeforeKeyboard || 0
-        setTimeout(() => {
-          wx.pageScrollTo({ scrollTop: prev, duration: 200 })
-        }, 100)
-      }
-    })
-  },
-
-  /**
-   * 滚动页面，让"填写报溢信息"标题刚好在页面顶部（避开导航栏）
-   */
-  _scrollToFormTitle() {
-    const query = this.createSelectorQuery()
-    query.select('.form-section-title').boundingClientRect()
-    query.exec((res) => {
-      if (!res || !res[0]) return
-      const rect = res[0]
-      const target = this.data.currentScrollTop + rect.top - (this._navBarHeight || 64)
-      if (target > 0) {
-        wx.pageScrollTo({ scrollTop: target, duration: 300 })
-      }
+      this.setData({
+        keyboardHeight: res.height,
+        keyboardUp: res.height > 0
+      })
     })
   },
 
@@ -329,10 +301,25 @@ Page({
     this.setData({ formBatch: e.detail.value })
   },
   onQuantityInput(e) {
-    this.setData({ formQuantity: e.detail.value })
+    const val = e.detail.value
+    const disabled = !val || parseInt(val) <= 1
+    this.setData({ formQuantity: val, quantityMinusDisabled: disabled })
   },
   onQuantityBlur() {
-    this.setData({ formQuantity: this.formatNumeric(this.data.formQuantity) })
+    const formatted = this.formatNumeric(this.data.formQuantity)
+    const disabled = !formatted || parseFloat(formatted) <= 1
+    this.setData({ formQuantity: formatted, quantityMinusDisabled: disabled })
+  },
+  onQuantityMinus() {
+    if (this.data.quantityMinusDisabled) return
+    const val = parseInt(this.data.formQuantity) || 1
+    const next = Math.max(1, val - 1)
+    this.setData({ formQuantity: String(next), quantityMinusDisabled: next <= 1 })
+  },
+  onQuantityPlus() {
+    const val = parseInt(this.data.formQuantity) || 0
+    const next = val + 1
+    this.setData({ formQuantity: String(next), quantityMinusDisabled: next <= 1 })
   },
   onCostInput(e) {
     this.setData({ formCost: e.detail.value })
@@ -349,11 +336,12 @@ Page({
 
   /**
    * input 回车键：切换到下一个输入框
+   * 顺序：数量 → 进价 → 批号 → 生产日期 → 有效期至
    * 最后一个输入框回车则收起键盘
    */
   onFormConfirm(e) {
     const field = e.currentTarget.dataset.field
-    const order = ['batch', 'quantity', 'cost', 'productionDate', 'expireDate']
+    const order = ['quantity', 'cost', 'batch', 'productionDate', 'expireDate']
     const idx = order.indexOf(field)
     if (idx < 0) return
 
