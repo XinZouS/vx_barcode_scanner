@@ -267,71 +267,10 @@
   opacity: 0.8;
 }
 
-/* 循环箭头 icon — 两个 ~160° 弧线 + 箭头 */
-.loop-icon {
-  width: 36rpx;
-  height: 36rpx;
-  border-radius: 50%;
-  position: relative;
-  /* 两个白色 140° 扇区，各间隔 20° */
-  background: conic-gradient(
-    from 5deg,
-    #fff 0deg,
-    #fff 140deg,
-    transparent 140deg,
-    transparent 180deg,
-    #fff 180deg,
-    #fff 320deg,
-    transparent 320deg,
-    transparent 360deg
-  );
-  /* 挖空中心，2rpx 宽圆环 */
-  -webkit-mask: radial-gradient(circle, transparent 15rpx, #000 15rpx, #000 17rpx, transparent 18rpx);
-}
-
-/* 关闭态：弧线用灰色 */
-.scan-toggle-btn:not(.scan-toggle-btn--on) .loop-icon {
-  background: conic-gradient(
-    from 5deg,
-    #999 0deg,
-    #999 140deg,
-    transparent 140deg,
-    transparent 180deg,
-    #999 180deg,
-    #999 320deg,
-    transparent 340deg,
-    transparent 360deg
-  );
-}
-
-/* 箭头 — 2px 线段，与圆弧端点切向 */
-.arrow {
-  position: absolute;
-  width: 24rpx;
-  height: 3rpx;
-  border-radius: 2rpx;
-}
-
-/* 开启态白色箭头 */
-.scan-toggle-btn--on .arrow {
-  background: #fff;
-}
-
-/* 关闭态灰色箭头 */
-.scan-toggle-btn:not(.scan-toggle-btn--on) .arrow {
-  background: #999;
-}
-
-.arrow--top {
-  top: 1rpx;
-  right: 0rpx;
-  transform: rotate(-30deg);
-}
-
-.arrow--bottom {
-  bottom: 1rpx;
-  left: 0rpx;
-  transform: rotate(150deg);
+/* Refresh 图标 — SVG 数据 URI，白弧+箭头 */
+.refresh-img {
+  width: 34rpx;
+  height: 34rpx;
 }
 
 /* 放大镜图标 */
@@ -352,13 +291,13 @@
 }
 
 .magnifier-handle {
-  width: 3rpx;
-  height: 11rpx;
+  width: 2rpx;
+  height: 20rpx;
   background: white;
   border-radius: 2rpx;
   position: absolute;
-  bottom: 3rpx;
-  right: 8rpx;
+  bottom: -8rpx;
+  right: -2rpx;
   transform: rotate(-45deg);
 }
 
@@ -502,10 +441,10 @@
 .goods-card .goods-info-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;  /* 垂直居中 */
-  padding: 12rpx 0;
+  align-items: center;
+  padding: 6rpx 0;
   border-bottom: 1rpx solid #f5f5f5;
-  min-height: 60rpx;
+  min-height: 40rpx;
 }
 
 .goods-card .info-value {
@@ -565,7 +504,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20rpx;
+  margin-bottom: 12rpx;
 }
 
 .card-close {
@@ -630,7 +569,7 @@
 .card-divider {
   height: 0;
   border-top: 3rpx solid #5cb85c;
-  margin: 16rpx 0;
+  margin: 10rpx 0;
   border-radius: 2rpx;
 }
 
@@ -698,7 +637,9 @@
   color: #888;
   align-self: center;
   flex-shrink: 0;
-  padding-bottom: 30rpx;  /* 对齐上方的 label 高度 */
+  padding-bottom: 30rpx;
+  margin-left: 10rpx;
+  margin-right: 10rpx;
 }
 
 /* 已盘数量颜色 */
@@ -895,7 +836,7 @@
 
 /* 货位可点击链接 */
 .allocation-link {
-  color: #1989fa;
+  color: #1989fa !important;
   font-size: 28rpx;
   font-weight: bold;
 }

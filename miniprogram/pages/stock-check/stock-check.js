@@ -453,7 +453,7 @@ Page({
    * 显示完成统计/重新开始 菜单
    */
   showFinishMenu() {
-    this.setData({ showFinishMenu: true })
+    this.setData({ showFinishMenu: !this.data.showFinishMenu })
   },
 
   /**
@@ -481,8 +481,18 @@ Page({
    * 强制重新开始（跳过完成统计）
    */
   handleForceRestart() {
-    this.hideFinishMenu()
-    this.handleStartCheck(true)
+    wx.showModal({
+      title: '重新开始',
+      content: '将清除本次已统计的数据，并重置统计数量（不会提交报损报溢数量）然后开始新一轮的统计，确定执行吗？',
+      confirmText: '确定',
+      cancelText: '取消',
+      success: (res) => {
+        if (res.confirm) {
+          this.hideFinishMenu()
+          this.handleStartCheck(true)
+        }
+      }
+    })
   },
 
   /**

@@ -23,13 +23,13 @@
           bindtap="showFinishMenu"
           disabled="{{startLoading}}"
           loading="{{startLoading}}"
-        >重新开始</button>
+        >完成/重开</button>
       </view>
     </view>
 
     <!-- 完成统计/重新开始 菜单 -->
     <view class="finish-menu-card card" wx:if="{{showFinishMenu}}">
-      <view class="finish-menu-title">盘点进行中</view>
+      <view class="finish-menu-title">当前统计进行中</view>
       <view class="finish-menu-desc">请选择操作</view>
       <button class="btn-finish" bindtap="handleFinishCheck" disabled="{{finishLoading}}" loading="{{finishLoading}}">完成统计</button>
       <button class="btn-restart-confirm" bindtap="handleForceRestart">重新开始</button>
@@ -92,10 +92,7 @@
     </view>
     <!-- 连续扫码 toggle -->
     <view class="scan-toggle-btn {{continuousScan ? 'scan-toggle-btn--on' : ''}}" bindtap="toggleContinuousScan">
-      <view class="loop-icon">
-        <view class="arrow arrow--top"></view>
-        <view class="arrow arrow--bottom"></view>
-      </view>
+      <image class="refresh-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAzMCI+CiAgPGRlZnM+CiAgICA8bWFya2VyIGlkPSJhIiBtYXJrZXJXaWR0aD0iNCIgbWFya2VySGVpZ2h0PSI0IiByZWZYPSIyIiByZWZZPSIyIiBvcmllbnQ9ImF1dG8iPgogICAgICA8cGF0aCBkPSJNIDAgMCBMIDQgMiBMIDAgNCBaIiBmaWxsPSJ3aGl0ZSIvPgogICAgPC9tYXJrZXI+CiAgPC9kZWZzPgogIDxwYXRoIGQ9Ik0gMTYuMDUgMy4wNSBBIDEyIDEyIDAgMCAxIDE2LjA1IDI2Ljk1IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBtYXJrZXItZW5kPSJ1cmwoI2EpIi8+CiAgPHBhdGggZD0iTSAxMy45NSAyNi45NSBBIDEyIDEyIDAgMCAxIDEzLjk1IDMuMDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG1hcmtlci1lbmQ9InVybCgjYSkiLz4KPC9zdmc+"/>
     </view>
   </view>
 
@@ -173,6 +170,10 @@
     <view class="goods-info-row">
       <text class="info-label">生产厂家</text>
       <text class="info-value">{{currentItem.manufacturer || '--'}}</text>
+    </view>
+    <view class="goods-info-row">
+      <text class="info-label">生产日期</text>
+      <text class="info-value">{{currentItem.production_date || '--'}}</text>
     </view>
     <view class="goods-info-row">
       <text class="info-label">批号</text>

@@ -5,7 +5,7 @@
     <text class="sheet-label">指定报溢单</text>
     <view class="sheet-picker">
       <text wx:if="{{selectedSheetCreatetime}}" class="sheet-picker-text">{{selectedSheetCreatetime}}</text>
-      <text wx:else class="sheet-picker-placeholder">点击选择（不选将查询已有或新建）</text>
+      <text wx:else class="sheet-picker-placeholder">点击选择；不选将自动关联已有或新建</text>
       <view class="sheet-picker-arrow {{showSheetPicker ? 'arrow-up' : 'arrow-down'}}"></view>
     </view>
   </view>
@@ -70,7 +70,7 @@
       <input
         class="search-input"
         value="{{searchKey}}"
-        placeholder="条码、拼音、商品名"
+        placeholder="条码、拼音、品名"
         bindinput="onSearchInput"
         bindconfirm="doSearch"
         confirm-type="search"

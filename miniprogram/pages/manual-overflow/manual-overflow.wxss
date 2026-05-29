@@ -303,14 +303,14 @@
 }
 
 .scan-icon-btn {
-  width: 48rpx;
-  height: 48rpx;
+  width: 32rpx;
+  height: 32rpx;
   position: relative;
 }
 
 .scan-frame-line {
-  width: 44rpx;
-  height: 44rpx;
+  width: 28rpx;
+  height: 28rpx;
   border: 3rpx solid white;
   border-radius: 6rpx;
   position: absolute;
