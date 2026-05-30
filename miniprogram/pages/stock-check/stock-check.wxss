@@ -769,7 +769,7 @@
 .hint-box {
   padding: 16rpx 20rpx;
   border-radius: 10rpx;
-  font-size: 24rpx;
+  font-size: 36rpx;
   line-height: 1.5;
 }
 

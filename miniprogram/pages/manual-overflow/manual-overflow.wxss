@@ -352,13 +352,13 @@
 }
 
 .magnifier-handle {
-  width: 3rpx;
-  height: 11rpx;
+  width: 2rpx;
+  height: 20rpx;
   background: white;
   border-radius: 2rpx;
   position: absolute;
-  bottom: 3rpx;
-  right: 8rpx;
+  bottom: -8rpx;
+  right: -2rpx;
   transform: rotate(-45deg);
 }
 

@@ -222,9 +222,9 @@ Page({
         this.setData({ searched: true, searchResults: [], currentItem: null })
       } else if (data.length === 1) {
         this.selectItem(data[0])
-        this.setData({ searched: true, searchResults: data })
+        this.setData({ searched: true, searchResults: this._formatCheckQty(data) })
       } else {
-        this.setData({ searched: true, searchResults: data })
+        this.setData({ searched: true, searchResults: this._formatCheckQty(data) })
       }
     } catch (err) {
       this.showError(err)
@@ -234,11 +234,18 @@ Page({
     }
   },
 
+  _formatCheckQty(list) {
+    return list.map(item => ({
+      ...item,
+      check_quantity_display: this.formatNum(item.check_quantity || 0)
+    }))
+  },
+
   selectItem(itemOrEvent) {
     const item = itemOrEvent.currentTarget ? itemOrEvent.currentTarget.dataset.item : itemOrEvent
     if (!item) return
 
-    const checkQty = item.check_quantity != null ? parseFloat(item.check_quantity) : 0
+    const checkQty = parseFloat(item.check_quantity) || 0
     const quantity = Number(item.quantity) || 0
 
     // 颜色：0→灰色，<库存→红色，==→绿色，>→黄色（对齐 Vue checkQtyClass）
@@ -302,10 +309,8 @@ Page({
   onQtyMinus() {
     const { actualQty } = this.data
     const v = parseInt(actualQty) || 0
-    if (v > 0) {
-      this.setData({ actualQty: (v - 1).toString() })
-      this.calculateDelta()
-    }
+    this.setData({ actualQty: (v - 1).toString() })
+    this.calculateDelta()
   },
 
   onQtyPlus() {
@@ -412,7 +417,7 @@ Page({
       const { searchResults } = this.data
       const updatedResults = searchResults.map(item => {
         if (item.id === currentItem.id) {
-          return { ...item, ischecked: true, check_quantity: newCheckQty }
+          return { ...item, ischecked: true, check_quantity: newCheckQty, check_quantity_display: this.formatNum(newCheckQty || 0) }
         }
         return item
       })

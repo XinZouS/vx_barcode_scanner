@@ -143,7 +143,7 @@
         <view class="result-meta-row">
           <text class="result-meta">批号:{{item.batch || '--'}} · 数量：</text>
           <text class="result-qty">{{item.quantity || 0}}</text>
-          <text class="result-checked" style="margin-left:auto;color:{{(item.quantity || 0) == (item.check_quantity || 0) ? '#67c23a' : ((item.quantity || 0) > (item.check_quantity || 0) ? '#f56c6c' : '#e6a23c')}}">· 已记录：{{item.check_quantity || 0}}</text>
+          <text class="result-checked" style="margin-left:auto;color:{{(item.quantity - 0) == (item.check_quantity - 0) ? '#67c23a' : ( (item.quantity - 0) > (item.check_quantity - 0) ? '#f56c6c' : '#e6a23c')}}">· 已记录：{{item.check_quantity_display || 0}}</text>
         </view>
       </view>
     </view>
@@ -218,7 +218,7 @@
             <view class="qty-btn-minus" bindtap="onQtyMinus">-</view>
             <input
               class="qty-flow-input {{deltaClass}}"
-              type="digit"
+              type="number"
               value="{{actualQty}}"
               placeholder="可填负数"
               bindinput="onActualQtyInput"
@@ -256,10 +256,10 @@
     <!-- 已盘数量相符 + 修改提示 — 对齐 Vue already-checked-hint -->
     <view class="already-checked-hint" wx:if="{{showAlreadyCheckedHint && actualQty !== ''}}">
       <view wx:if="{{deltaPreview > 0}}" class="hint-box hint-box--loss">
-        <text>⚠ 已盘数量与库存相符，继续提交将扣减已盘数量，确认修改？</text>
+        <text>⚠ 已记录数量与库存相符，继续提交将【 扣减 】记录数量，确认修改？</text>
       </view>
       <view wx:elif="{{deltaPreview < 0}}" class="hint-box hint-box--overflow">
-        <text>⚠ 已盘数量与库存相符，继续提交将增加已盘数量，确认修改？</text>
+        <text>⚠ 已记录数量与库存相符，继续提交将【 增加 】记录数量，确认修改？</text>
       </view>
     </view>
 
