@@ -40,8 +40,7 @@
 
 .task-time,
 .task-update {
-  font-size: 24rpx;
-  opacity: 0.9;
+  font-size: 28rpx;
 }
 
 /* 数据操作栏 */

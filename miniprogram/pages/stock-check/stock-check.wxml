@@ -38,12 +38,15 @@
 
     <!-- 进度展示 -->
     <view class="progress-section" wx:if="{{progress.is_in_progress}}">
-      <view class="progress-label">
-        <text>已统计 </text>
-        <text class="progress-checked">{{progress.checked}}</text>
-        <text> / 待统计 </text>
-        <text class="progress-unchecked">{{progress.unchecked}}</text>
-        <text>（{{progressPercent}}%）</text>
+      <view class="progress-header">
+        <view class="progress-label">
+          <text>已统计 </text>
+          <text class="progress-checked">{{progress.checked}}</text>
+          <text> / 待统计 </text>
+          <text class="progress-unchecked">{{progress.unchecked}}</text>
+          <text>（{{progressPercent}}%）</text>
+        </view>
+        <button class="btn-unchecked {{uncheckedList.length > 0 ? 'btn-unchecked--active' : ''}}" size="mini" bindtap="fetchUnchecked" loading="{{uncheckedLoading}}">未记录</button>
       </view>
       <view class="progress-bar">
         <view class="progress-fill" style="width: {{progressWidth}}"></view>
@@ -118,8 +121,8 @@
     <text class="loading-text">正在查询...</text>
   </view>
 
-  <!-- 搜索结果列表 -->
-  <view class="search-results" wx:if="{{searchResults.length > 0 && !currentItem && !searchLoading}}">
+  <!-- 搜索结果列表（与未记录列表互斥） -->
+  <view class="search-results" wx:if="{{searchResults.length > 0 && !currentItem && !searchLoading && uncheckedList.length === 0}}">
     <view
       class="result-item"
       wx:for="{{searchResults}}"
@@ -282,7 +285,7 @@
   <!-- 初始状态提示 - 无搜索关键词时显示扫码图标 -->
   <view
     class="empty-state"
-    wx:if="{{!searchKey && !currentItem && !searchLoading && searchResults.length === 0}}"
+    wx:if="{{!searchKey && !currentItem && !searchLoading && searchResults.length === 0 && uncheckedList.length === 0}}"
   >
     <view class="empty-icon-wrap" bindtap="handleScan">
       <view class="scan-icon-large">
@@ -293,6 +296,44 @@
     </view>
     <text class="empty-text">请扫条码或输入物品信息</text>
     <text class="empty-hint">点击上方图标扫码</text>
+  </view>
+
+  <!-- 未记录的库存列表 -->
+  <view class="unchecked-section" wx:if="{{uncheckedList.length > 0 && !currentItem}}">
+    <view class="unchecked-header">
+      <text class="unchecked-title">未记录列表（{{uncheckedCount}}）</text>
+      <text class="unchecked-close" bindtap="clearUnchecked">✕</text>
+    </view>
+    <view
+      class="result-item"
+      wx:for="{{uncheckedList}}"
+      wx:key="id"
+      bindtap="selectItem"
+      data-item="{{item}}"
+    >
+      <view class="result-info">
+        <view class="result-name-row">
+          <text class="result-name">{{item.name || '--'}}</text>
+          <view class="result-status">
+            <view wx:if="{{item.ischecked === true}}" class="status-tag status-checked">已记录</view>
+            <view wx:elif="{{item.ischecked === false}}" class="status-tag status-unchecked">待记录</view>
+            <view wx:else class="status-tag status-unknown">未设置</view>
+          </view>
+        </view>
+        <view class="result-spec-row">
+          <text class="result-spec">{{item.specification || '--'}}</text>
+          <text class="result-id-text">ID：{{item.info}}</text>
+        </view>
+        <view class="result-meta-row">
+          <text class="result-meta">批号:{{item.batch || '--'}} · 数量：</text>
+          <text class="result-qty">{{item.quantity_display || 0}}</text>
+          <text class="result-checked" style="margin-left:auto;color:{{(item.quantity - 0) == (item.check_quantity - 0) ? '#67c23a' : ( (item.quantity - 0) > (item.check_quantity - 0) ? '#f56c6c' : '#e6a23c')}}">· 已记录：{{item.check_quantity_display || 0}}</text>
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{uncheckedHasMore}}" class="unchecked-more" bindtap="loadMoreUnchecked">
+      <text>加载更多...</text>
+    </view>
   </view>
 
   <!-- 货位选择弹窗 -->
@@ -315,7 +356,7 @@
         </view>
 
         <!-- 货位列表 -->
-        <scroll-view class="allocation-list" scroll-y>
+        <scroll-view class="allocation-list" scroll-y bindscrolltolower="onAllocationScrollToLower" lower-threshold="40">
           <view
             class="allocation-item {{selectedAllocationId === item.id ? 'selected' : ''}}"
             wx:for="{{filteredAllocations}}"
@@ -327,8 +368,12 @@
             <text class="allocation-item-name">{{item.name}}</text>
             <text wx:if="{{selectedAllocationId === item.id}}" class="allocation-check">✓</text>
           </view>
-          <view wx:if="{{filteredAllocations.length === 0}}" class="allocation-empty">
+          <view wx:if="{{filteredAllocations.length === 0 && !allocationLoading}}" class="allocation-empty">
             未找到货位
+          </view>
+          <view wx:if="{{allocationLoading}}" class="allocation-loading">
+            <view class="loading-spinner"></view>
+            <text class="loading-text">加载中...</text>
           </view>
         </scroll-view>
       </view>

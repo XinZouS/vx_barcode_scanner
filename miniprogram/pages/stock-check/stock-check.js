@@ -35,7 +35,7 @@ Page({
     showFinishMenu: false,
 
     // 连续扫码 toggle
-    continuousScan: false,
+    continuousScan: true,
 
     // 成功提示浮层
     showSuccessOverlay: false,
@@ -59,10 +59,21 @@ Page({
     selectedAllocationId: null,
     currentAllocationName: '',
     newAllocationName: '',
+    // 货位分页
+    allocationPage: 1,
+    allocationHasMore: true,
+    allocationLoading: false,
     // 全局指定货位（跨物品持久化）
     specifiedAllocationId: null,
     specifiedAllocationName: '',
-    autoLinkEnabled: true
+    autoLinkEnabled: true,
+
+    // 未记录列表
+    uncheckedList: [],
+    uncheckedCount: 0,
+    uncheckedPage: 1,
+    uncheckedHasMore: false,
+    uncheckedLoading: false
   },
 
   onLoad() {
@@ -211,6 +222,10 @@ Page({
     }
 
     this.setData({ searchLoading: true, searched: false, currentItem: null })
+    // 搜索时隐藏未记录列表
+    if (this.data.uncheckedList.length > 0) {
+      this.clearUnchecked()
+    }
 
     try {
       const data = await request.get('/stock/goods_search/', {
@@ -260,9 +275,8 @@ Page({
       checkQtyClass = 'qty-yellow'
     }
 
-    // 自动填入剩余未盘数量：quantity - check_quantity（对齐 Vue）
-    const autoQty = quantity - checkQty
-    const actualQty = autoQty >= 0 ? String(autoQty) : String(autoQty)
+    // 默认 0，强制用户手动录入本次数量，避免盲目提交
+    const actualQty = '0'
 
     // 已盘数量 == 库存时，提示用户
     const showAlreadyCheckedHint = checkQty === quantity && quantity > 0
@@ -295,8 +309,7 @@ Page({
       deltaClass: '',
       submitBtnText: '提交盘点结果',
       isChecked: false,
-      showAlreadyCheckedHint: false,
-      searchKey: ''
+      showAlreadyCheckedHint: false
     })
   },
 
@@ -423,13 +436,21 @@ Page({
       })
       this.setData({ searchResults: updatedResults })
 
+      // 提交成功后从"未记录"列表移除该商品
+      const { uncheckedList } = this.data
+      const updatedUnchecked = uncheckedList.filter(item => item.id !== currentItem.id)
+      if (updatedUnchecked.length !== uncheckedList.length) {
+        this.setData({ uncheckedList: updatedUnchecked })
+      }
+
       // 成功提示
+      const displayQty = this.formatNum(chkNum)
       if (chkNum === quantity) {
         this.showLargeSuccess('数量相符 ✓')
       } else if (chkNum < quantity) {
-        this.showLargeSuccess(`已盘 ${newCheckQty}`)
+        this.showLargeSuccess(`已盘 ${displayQty}`)
       } else {
-        this.showLargeSuccess(`已盘 ${newCheckQty}，超出库存`)
+        this.showLargeSuccess(`已盘 ${displayQty}，超出库存`)
       }
 
       await this.fetchProgress()
@@ -553,6 +574,117 @@ Page({
     })
   },
 
+  // ========== 未记录列表 ==========
+
+  /**
+   * 将 /stock/goods/ 嵌套结构扁平化为 goods_search 风格
+   */
+  _normalizeGoodsItem(nested) {
+    const gi = nested.goodsproperty?.goodsinfo || {}
+    return {
+      id: nested.id,
+      info: gi.id || null,
+      name: gi.name || '--',
+      specification: gi.specification || '--',
+      manufacturer: gi.manufacturer_name || '--',
+      unit: gi.unit || '',
+      barcode: gi.barcode || '',
+      batch: nested.batch || '',
+      expire_date: nested.expire_date || '',
+      production_date: nested.production_date || '',
+      quantity: nested.quantity || '0',
+      check_quantity: nested.check_quantity || '',
+      ischecked: nested.ischecked,
+      allocation_name: nested.goodsproperty?.allocation_name || '',
+      allocation_id: nested.allocation_id || null,
+      quantity_display: this.formatNum(nested.quantity || 0),
+      check_quantity_display: this.formatNum(nested.check_quantity || 0)
+    }
+  },
+
+  async fetchUnchecked() {
+    const { uncheckedLoading, uncheckedList } = this.data
+    if (uncheckedLoading) return
+
+    // toggle：已展开则关闭
+    if (uncheckedList.length > 0) {
+      this.clearUnchecked()
+      return
+    }
+
+    const userManager = require('../../utils/user')
+    const userInfo = userManager.getUserInfo()
+    const deptId = userInfo?.dept || userInfo?.dept_id || userInfo?.curr_dept_id || ''
+
+    this.setData({ uncheckedLoading: true })
+    try {
+      const res = await request.get('/stock/goods/', {
+        page: 1,
+        size: 20,
+        dept: deptId,
+        ischecked: 'false',
+        is_enable: 'true',
+        quantity_gt: '0'
+      })
+      const rawList = (res.results) || []
+      const list = rawList.map(item => this._normalizeGoodsItem(item))
+      const count = res.count || 0
+      const hasMore = list.length < count
+
+      this.setData({
+        uncheckedList: list,
+        uncheckedCount: count,
+        uncheckedPage: 1,
+        uncheckedHasMore: hasMore,
+        uncheckedLoading: false
+      })
+    } catch (err) {
+      this.showError(err)
+      this.setData({ uncheckedLoading: false })
+    }
+  },
+
+  async loadMoreUnchecked() {
+    const { uncheckedLoading, uncheckedHasMore, uncheckedPage } = this.data
+    if (uncheckedLoading || !uncheckedHasMore) return
+
+    const userManager = require('../../utils/user')
+    const userInfo = userManager.getUserInfo()
+    const deptId = userInfo?.dept || userInfo?.dept_id || userInfo?.curr_dept_id || ''
+
+    const nextPage = uncheckedPage + 1
+    this.setData({ uncheckedLoading: true })
+    try {
+      const res = await request.get('/stock/goods/', {
+        page: nextPage,
+        size: 20,
+        dept: deptId,
+        ischecked: 'false',
+        is_enable: 'true',
+        quantity_gt: '0'
+      })
+      const rawList = (res.results) || []
+      const moreItems = rawList.map(item => this._normalizeGoodsItem(item))
+      const merged = [...this.data.uncheckedList, ...moreItems]
+      const count = res.count || 0
+      const hasMore = merged.length < count
+
+      this.setData({
+        uncheckedList: merged,
+        uncheckedPage: nextPage,
+        uncheckedHasMore: hasMore,
+        uncheckedLoading: false
+      })
+    } catch (err) {
+      this.showError(err)
+      this.setData({ uncheckedLoading: false })
+    }
+  },
+
+  clearUnchecked() {
+    this.setData({ uncheckedList: [], uncheckedCount: 0, uncheckedPage: 1, uncheckedHasMore: false })
+  },
+
   confirmAllocation() {
     const { selectedAllocationId, allocationList } = this.data
     if (!selectedAllocationId) {
@@ -581,13 +713,34 @@ Page({
 
   // ========== 货位列表获取/搜索/新增 ==========
 
-  async fetchAllocations() {
+  async fetchAllocations(append = false) {
+    if (this.data.allocationLoading) return
+    if (append && !this.data.allocationHasMore) return  // 已无更多，停止请求
+
+    this.setData({ allocationLoading: true })
     try {
-      const data = await request.get('/goods/allocation/')
-      const list = (data && data.results) || []
-      this.setData({ allocationList: list, filteredAllocations: list })
+      const page = append ? this.data.allocationPage + 1 : 1
+      const data = await request.get('/goods/allocation/', {
+        page: page,
+        size: 20
+      })
+      const results = (data && data.results) || []
+      const count = data && data.count != null ? data.count : 0
+      const loadedCount = append ? this.data.allocationList.length + results.length : results.length
+      const hasMore = loadedCount < count
+
+      const mergedList = append ? [...this.data.allocationList, ...results] : results
+
+      this.setData({
+        allocationList: mergedList,
+        filteredAllocations: mergedList,
+        allocationPage: page,
+        allocationHasMore: hasMore,
+        allocationLoading: false
+      })
     } catch (err) {
       this.showError(err)
+      this.setData({ allocationLoading: false })
     }
   },
 
@@ -595,8 +748,18 @@ Page({
     this.setData({
       showAllocationDialog: false,
       allocationSearchKey: '',
-      filteredAllocations: []
+      filteredAllocations: [],
+      allocationPage: 1,
+      allocationHasMore: true,
+      allocationLoading: false
     })
+  },
+
+  /**
+   * 货位列表上拉加载更多
+   */
+  onAllocationScrollToLower() {
+    this.fetchAllocations(true)
   },
 
   onAllocationSearchInput(e) {
