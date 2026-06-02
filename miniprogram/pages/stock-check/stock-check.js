@@ -321,14 +321,14 @@ Page({
 
   onQtyMinus() {
     const { actualQty } = this.data
-    const v = parseInt(actualQty) || 0
+    const v = parseFloat(actualQty) || 0
     this.setData({ actualQty: (v - 1).toString() })
     this.calculateDelta()
   },
 
   onQtyPlus() {
     const { actualQty } = this.data
-    const v = parseInt(actualQty) || 0
+    const v = parseFloat(actualQty) || 0
     this.setData({ actualQty: (v + 1).toString() })
     this.calculateDelta()
   },

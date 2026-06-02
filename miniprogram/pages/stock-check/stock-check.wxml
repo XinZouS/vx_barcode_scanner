@@ -221,7 +221,7 @@
             <view class="qty-btn-minus" bindtap="onQtyMinus">-</view>
             <input
               class="qty-flow-input {{deltaClass}}"
-              type="number"
+              type="digit"
               value="{{actualQty}}"
               placeholder="可填负数"
               bindinput="onActualQtyInput"
