@@ -59,9 +59,6 @@ Page({
     selectedAllocationId: null,
     currentAllocationName: '',
     newAllocationName: '',
-    // 货位分页
-    allocationPage: 1,
-    allocationHasMore: true,
     allocationLoading: false,
     // 全局指定货位（跨物品持久化）
     specifiedAllocationId: null,
@@ -385,13 +382,63 @@ Page({
   },
 
   // ========== 提交统计 ==========
-  async handleSubmitCheck() {
+  handleSubmitCheck() {
     const { currentItem, actualQty, submitLoading } = this.data
     if (!currentItem || actualQty === '') {
       wx.showToast({ title: '请输入本次清点数量', icon: 'none' })
       return
     }
     if (submitLoading) return
+
+    // 防误操作：本次增加=0 且 记录库存≠已盘数量 时（即提交0会产生报损/报溢），弹窗二次确认
+    const actNum = Number(actualQty) || 0
+    const stockQty = Number(currentItem.quantity) || 0
+    const countedQty = Number(currentItem.check_quantity) || 0
+
+    if (actNum === 0 && stockQty !== countedQty) {
+      const itemName = currentItem.name || '该物品'
+      const lossAmount = stockQty - countedQty  // >0 报损, <0 报溢
+      const displayAmount = this.formatNum(Math.abs(lossAmount))
+      const typeLabel = lossAmount > 0 ? '报损' : '报溢'
+      const self = this
+      // 用 setTimeout 确保从 tap 事件返回后再弹 modal，避免事件冲突
+      setTimeout(() => {
+        wx.showModal({
+          title: `确认${typeLabel}`,
+          content: `本次增加为 0，将把「${itemName}」的数量【${displayAmount} 个】进行【${typeLabel}】确认执行？`,
+          confirmText: `确认${typeLabel} ${displayAmount}`,
+          confirmColor: '#ee0a24',
+          cancelText: '取消',
+          success(res) {
+            if (res.confirm) {
+              self._doSubmit()
+            }
+          },
+          fail() {
+            // wx.showModal 异常时用 toast 代替确认
+            wx.showModal({
+              title: `确认${typeLabel}`,
+              content: `将把「${itemName}」的数量【${displayAmount}】进行【${typeLabel}】，确认执行？`,
+              confirmText: '确认',
+              confirmColor: '#ee0a24',
+              cancelText: '取消',
+              success(res2) {
+                if (res2.confirm) {
+                  self._doSubmit()
+                }
+              }
+            })
+          }
+        })
+      }, 50)
+      return
+    }
+
+    this._doSubmit()
+  },
+
+  async _doSubmit() {
+    const { currentItem, actualQty } = this.data
 
     this.setData({ submitLoading: true })
     wx.vibrateShort({ type: 'medium' })
@@ -412,50 +459,101 @@ Page({
 
       const result = await request.post('/stock/checking/submit/', payload)
 
-      // 更新 currentItem 的 check_quantity（从接口返回）
-      const newCheckQty = result.check_quantity != null ? String(result.check_quantity) : '0'
-      const quantity = Number(currentItem.quantity) || 0
-      const chkNum = parseFloat(newCheckQty) || 0
+      // ── 处理已删除记录（goodsproperty=None 导致物理删除） ──
+      if (result.deleted) {
+        wx.showToast({ title: result.delete_reason || '该记录已被删除', icon: 'none', duration: 3000 })
+        const { searchResults, uncheckedList } = this.data
+        this.setData({
+          searchResults: searchResults.filter(item => item.id !== currentItem.id),
+          uncheckedList: uncheckedList.filter(item => item.id !== currentItem.id),
+          currentItem: null
+        })
+        await this.fetchProgress()
+        return
+      }
 
+      // ── 使用后端返回的最新数据 ──
+      const newQuantity = Number(result.quantity) || 0
+      const newCheckQty = result.check_quantity != null ? String(result.check_quantity) : '0'
+      const chkNum = parseFloat(newCheckQty) || 0
+      const delta = parseFloat(result.delta) || 0
+      const isEnabled = result.is_enable
+      const sheetType = result.sheet_type  // 'loss' | 'overflow' | null
+
+      // 颜色判断：使用后端返回的最新 quantity
       let checkQtyClass = ''
       if (chkNum === 0) checkQtyClass = 'qty-gray'
-      else if (chkNum < quantity) checkQtyClass = 'qty-red'
-      else if (chkNum === quantity) checkQtyClass = 'qty-green'
+      else if (chkNum < newQuantity) checkQtyClass = 'qty-red'
+      else if (chkNum === newQuantity) checkQtyClass = 'qty-green'
       else checkQtyClass = 'qty-yellow'
 
       wx.vibrateShort({ type: 'medium' })
       setTimeout(() => { wx.vibrateShort({ type: 'medium' }) }, 100)
 
-      // 更新搜索结果列表中该物品的 ischecked 状态
-      const { searchResults } = this.data
+      // ── 更新搜索结果列表中该物品（用后端最新数据覆盖） ──
+      const { searchResults, uncheckedList } = this.data
       const updatedResults = searchResults.map(item => {
         if (item.id === currentItem.id) {
-          return { ...item, ischecked: true, check_quantity: newCheckQty, check_quantity_display: this.formatNum(newCheckQty || 0) }
+          return {
+            ...item,
+            ischecked: true,
+            quantity: String(newQuantity),
+            check_quantity: newCheckQty,
+            check_quantity_display: this.formatNum(newCheckQty || 0),
+            quantity_display: this.formatNum(newQuantity || 0),
+            is_enable: isEnabled,
+            allocation_id: result.allocation_id,
+            allocation_name: result.allocation_name
+          }
         }
         return item
       })
-      this.setData({ searchResults: updatedResults })
+
+      // 库存归零（is_enable=false）时从搜索结果移除
+      const finalResults = isEnabled === false
+        ? updatedResults.filter(item => item.id !== currentItem.id)
+        : updatedResults
+
+      this.setData({ searchResults: finalResults })
+
+      // ── 更新 currentItem（即时反映后端最新状态） ──
+      this.setData({
+        currentItem: {
+          ...currentItem,
+          quantity: String(newQuantity),
+          check_quantity: newCheckQty,
+          is_enable: isEnabled,
+          ischecked: true,
+          allocation_id: result.allocation_id,
+          allocation_name: result.allocation_name
+        },
+        quantityDisplay: String(newQuantity),
+        checkQuantityDisplay: String(chkNum),
+        checkQtyClass,
+        isChecked: true
+      })
 
       // 提交成功后从"未记录"列表移除该商品
-      const { uncheckedList } = this.data
       const updatedUnchecked = uncheckedList.filter(item => item.id !== currentItem.id)
       if (updatedUnchecked.length !== uncheckedList.length) {
         this.setData({ uncheckedList: updatedUnchecked })
       }
 
-      // 成功提示
+      // ── 成功提示：基于 sheet_type / delta 给更精确的反馈 ──
       const displayQty = this.formatNum(chkNum)
-      if (chkNum === quantity) {
+      if (sheetType === 'loss') {
+        this.showLargeSuccess(`已盘 ${displayQty}，自动报损 ${this.formatNum(delta)}`)
+      } else if (sheetType === 'overflow') {
+        this.showLargeSuccess(`已盘 ${displayQty}，自动报溢 ${this.formatNum(Math.abs(delta))}`)
+      } else if (delta === 0) {
         this.showLargeSuccess('数量相符 ✓')
-      } else if (chkNum < quantity) {
-        this.showLargeSuccess(`已盘 ${displayQty}`)
       } else {
-        this.showLargeSuccess(`已盘 ${displayQty}，超出库存`)
+        this.showLargeSuccess(`已盘 ${displayQty}`)
       }
 
       await this.fetchProgress()
 
-      // 如果有搜索结果列表，保留列表；否则清空回到 placeholder
+      // 清空当前物品卡片
       if (this.data.searchResults.length > 0) {
         this.setData({ currentItem: null })
       } else {
@@ -527,7 +625,7 @@ Page({
   handleFinishCheck() {
     wx.showModal({
       title: '完成统计',
-      content: '将完成本次统计并清算物品数量差异，自动生成报损报溢单，需要人工审核后手动提交。\n确认完成统计吗？',
+      content: '将完成本次统计并清除“已记录”标记，报损与报溢明细请在“账务商品查询”页面查看。\n确认完成统计吗？',
       confirmText: '确认',
       cancelText: '取消',
       success: async (res) => {
@@ -713,29 +811,18 @@ Page({
 
   // ========== 货位列表获取/搜索/新增 ==========
 
-  async fetchAllocations(append = false) {
+  async fetchAllocations() {
     if (this.data.allocationLoading) return
-    if (append && !this.data.allocationHasMore) return  // 已无更多，停止请求
 
     this.setData({ allocationLoading: true })
     try {
-      const page = append ? this.data.allocationPage + 1 : 1
-      const data = await request.get('/goods/allocation/', {
-        page: page,
-        size: 20
-      })
-      const results = (data && data.results) || []
-      const count = data && data.count != null ? data.count : 0
-      const loadedCount = append ? this.data.allocationList.length + results.length : results.length
-      const hasMore = loadedCount < count
-
-      const mergedList = append ? [...this.data.allocationList, ...results] : results
+      // fields=id_name 触发后端跳过 paginator，返回全量货位列表
+      const data = await request.get('/goods/allocation/', { fields: 'id_name' })
+      const results = (data && data.results) || data || []
 
       this.setData({
-        allocationList: mergedList,
-        filteredAllocations: mergedList,
-        allocationPage: page,
-        allocationHasMore: hasMore,
+        allocationList: results,
+        filteredAllocations: results,
         allocationLoading: false
       })
     } catch (err) {
@@ -749,17 +836,8 @@ Page({
       showAllocationDialog: false,
       allocationSearchKey: '',
       filteredAllocations: [],
-      allocationPage: 1,
-      allocationHasMore: true,
       allocationLoading: false
     })
-  },
-
-  /**
-   * 货位列表上拉加载更多
-   */
-  onAllocationScrollToLower() {
-    this.fetchAllocations(true)
   },
 
   onAllocationSearchInput(e) {

@@ -356,7 +356,7 @@
         </view>
 
         <!-- 货位列表 -->
-        <scroll-view class="allocation-list" scroll-y bindscrolltolower="onAllocationScrollToLower" lower-threshold="40">
+        <scroll-view class="allocation-list" scroll-y>
           <view
             class="allocation-item {{selectedAllocationId === item.id ? 'selected' : ''}}"
             wx:for="{{filteredAllocations}}"
