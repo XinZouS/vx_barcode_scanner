@@ -118,13 +118,14 @@
       <view class="result-info">
         <view class="result-name-row">
           <text class="result-name">{{item.name || '--'}}</text>
+          <text class="result-id-text">ID：{{item.id}}</text>
         </view>
         <view class="result-spec-row">
           <text class="result-spec">{{item.specification || '--'}}</text>
-          <text class="result-id-text">ID：{{item.id}}</text>
+          <text class="result-manufacturer-text">{{item.manufacturer || '--'}}</text>
         </view>
         <view class="result-meta-row">
-          <text class="result-meta">厂家:{{item.manufacturer || '--'}} · 条码:{{item.barcode || '--'}}</text>
+          <text class="result-meta">条码：{{item.barcode || '--'}}</text>
         </view>
       </view>
     </view>
@@ -147,6 +148,10 @@
       <text class="info-value">{{selectedItem.specification || '--'}}</text>
     </view>
     <view class="goods-info-row">
+      <text class="info-label">条码</text>
+      <text class="info-value">{{selectedItem.barcode || '--'}}</text>
+    </view>
+    <view class="goods-info-row">
       <text class="info-label">生产厂家</text>
       <text class="info-value">{{selectedItem.manufacturer || '--'}}</text>
     </view>
@@ -156,7 +161,7 @@
     </view>
 
     <view class="card-divider"></view>
-    <view class="form-section-title">填写报溢信息</view>
+    <view class="form-section-title">填写报溢批次信息</view>
 
     <view class="form-row">
       <text class="form-label">数量 <text class="required">*</text></text>

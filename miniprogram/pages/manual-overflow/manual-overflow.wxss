@@ -424,7 +424,7 @@
 
 .result-item {
   padding: 25rpx 30rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid #d9d9d9;
 }
 
 .result-item:last-child {
@@ -439,7 +439,10 @@
   font-size: 32rpx;
   font-weight: bold;
   color: #333;
-  display: block;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .result-name-row {
@@ -452,13 +455,29 @@
 .result-spec-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12rpx;
   margin-bottom: 5rpx;
 }
 
 .result-spec {
   font-size: 30rpx;
   color: #666;
+  flex: 1 1 0%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.result-manufacturer-text {
+  font-size: 30rpx;
+  color: #666;
+  flex: 1 1 0%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+  min-width: 0;
 }
 
 .result-id-text {
@@ -473,8 +492,8 @@
 }
 
 .result-meta {
-  font-size: 26rpx;
-  color: #999;
+  font-size: 30rpx;
+  color: #888;
 }
 
 /* ===== 空状态 ===== */
@@ -573,7 +592,7 @@
 
 /* ===== 表单区域 ===== */
 .form-section-title {
-  font-size: 30rpx;
+  font-size: 34rpx;
   color: #5cb85c;
   font-weight: bold;
   margin-bottom: 20rpx;

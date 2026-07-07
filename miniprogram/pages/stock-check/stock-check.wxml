@@ -179,15 +179,15 @@
       <text class="info-value">{{currentItem.production_date || '--'}}</text>
     </view>
     <view class="goods-info-row">
-      <text class="info-label">批号</text>
-      <text class="info-value">{{currentItem.batch || '--'}}</text>
-    </view>
-    <view class="goods-info-row">
       <text class="info-label">有效期至</text>
       <view class="info-value info-value-row">
         <text class="{{isItemExpired ? 'text-danger' : ''}}">{{currentItem.expire_date || '--'}}</text>
         <text class="tag-danger" wx:if="{{isItemExpired}}">已过期</text>
       </view>
+    </view>
+    <view class="goods-info-row">
+      <text class="info-label">批号</text>
+      <text class="info-value">{{currentItem.batch || '--'}}</text>
     </view>
     <view class="goods-info-row">
       <text class="info-label">货位</text>
@@ -197,33 +197,32 @@
     <!-- 绿色分隔线 — 对齐 Vue card-divider -->
     <view class="card-divider"></view>
 
-    <!-- 数量四段流：记录库存 — 已盘数量 + 本次增加 = 预计差值 -->
+    <!-- 数量四段流：记录库存 − 已盘数量 → 实盘库存 = 预计差值 -->
     <view class="qty-flow">
-      <!-- Row 1：记录库存 — 已盘数量 -->
-      <view class="qty-flow-row">
-        <view class="qty-flow-box">
+      <!-- Row 1：记录库存 − 已盘数量（只读参考） -->
+      <view class="qty-flow-row qty-flow-row--ref">
+        <view class="qty-flow-box qty-flow-box--record">
           <text class="qty-flow-label">记录库存</text>
           <text class="qty-flow-value qty-flow-value--big qty-flow-value--record">{{quantityDisplay}}</text>
         </view>
-        <text class="qty-flow-arrow">—</text>
-        <view class="qty-flow-box">
+        <text class="qty-flow-arrow qty-flow-arrow--minus">−</text>
+        <view class="qty-flow-box qty-flow-box--checked">
           <text class="qty-flow-label">已盘数量</text>
           <text class="qty-flow-value qty-flow-value--big {{checkQtyClass}}">{{checkQuantityDisplay}}</text>
         </view>
       </view>
 
-      <!-- Row 2：本次增加 + 预计差值 -->
+      <!-- Row 2：实盘库存（本次输入） = 预计差值 -->
       <view class="qty-flow-row qty-flow-row--input">
-        <text class="qty-flow-arrow">+</text>
         <view class="qty-flow-box qty-flow-box--input">
-          <text class="qty-flow-label">本次增加</text>
+          <text class="qty-flow-label">本次增减</text>
           <view class="qty-flow-input-wrap">
             <view class="qty-btn-minus" bindtap="onQtyMinus">-</view>
             <input
               class="qty-flow-input {{deltaClass}}"
               type="digit"
               value="{{actualQty}}"
-              placeholder="可填负数"
+              placeholder="本次实盘数量"
               bindinput="onActualQtyInput"
               bindconfirm="handleSubmitCheck"
               adjust-position="{{true}}"
@@ -232,23 +231,21 @@
           </view>
         </view>
         <text class="qty-flow-arrow">=</text>
+
+        <!-- 预计差值（记录库存 − 已盘数量 − 实盘库存） -->
         <view class="qty-flow-box qty-flow-box--delta">
           <text class="qty-flow-label">预计差值</text>
-          <!-- 未输入时不显示 -->
           <block wx:if="{{actualQty === ''}}">
             <text class="qty-flow-value qty-flow-value--muted">—</text>
           </block>
-          <!-- 报损 -->
           <block wx:elif="{{deltaPreview > 0}}">
             <text class="qty-flow-value qty-flow-value--big delta-loss">▼ {{deltaPreviewDisplay}}</text>
             <text class="delta-tag delta-tag--loss">预计报损</text>
           </block>
-          <!-- 报溢 -->
           <block wx:elif="{{deltaPreview < 0}}">
             <text class="qty-flow-value qty-flow-value--big delta-overage">▲ {{deltaPreviewDisplay}}</text>
             <text class="delta-tag delta-tag--overflow">预计报溢</text>
           </block>
-          <!-- 相符 -->
           <block wx:else>
             <text class="qty-flow-value qty-flow-value--big delta-ok">✓ 相符</text>
           </block>
@@ -256,24 +253,24 @@
       </view>
     </view>
 
-    <!-- 已盘数量相符 + 修改提示 — 对齐 Vue already-checked-hint -->
+    <!-- 已盘点物品二次修改提示 -->
     <view class="already-checked-hint" wx:if="{{showAlreadyCheckedHint && actualQty !== ''}}">
       <view wx:if="{{deltaPreview > 0}}" class="hint-box hint-box--loss">
-        <text>⚠ 已记录数量与库存相符，继续提交将【 扣减 】记录数量，确认修改？</text>
+        <text>⚠ 该物品已盘点过，继续追加将产生【 报损 】，确认提交？</text>
       </view>
       <view wx:elif="{{deltaPreview < 0}}" class="hint-box hint-box--overflow">
-        <text>⚠ 已记录数量与库存相符，继续提交将【 增加 】记录数量，确认修改？</text>
+        <text>⚠ 该物品已盘点过，继续追加将产生【 报溢 】，确认提交？</text>
       </view>
     </view>
 
-    <!-- 提交按钮 — 全宽内联 -->
+    <!-- 提交按钮 — 全宽内联，文案随预计差值变化 -->
     <view class="submit-area">
       <button
         class="btn-submit {{deltaClass}}"
         bindtap="handleSubmitCheck"
         disabled="{{submitLoading || actualQty === ''}}"
         loading="{{submitLoading}}"
-      >提交盘点结果</button>
+      >{{submitBtnText}}</button>
     </view>
   </view>
 

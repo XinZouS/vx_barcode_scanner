@@ -617,8 +617,19 @@
   margin-bottom: 14rpx;
 }
 
-.qty-flow-row--input {
-  align-items: flex-start;
+.qty-flow-row--ref {
+  gap: 6rpx;
+}
+
+.qty-flow-box--checked {
+  flex: 1;
+}
+
+.qty-flow-arrow--minus {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #999;
+  margin: 0 4rpx;
 }
 
 /* 数量流方块 */
@@ -632,11 +643,11 @@
 }
 
 .qty-flow-box--input {
-  flex: 2;
+  flex: 2.4;
 }
 
 .qty-flow-box--delta {
-  flex: 1.2;
+  flex: 1.4;
 }
 
 .qty-flow-label {
@@ -666,12 +677,10 @@
 
 .qty-flow-arrow {
   font-size: 42rpx;
-  color: #000;
+  color: #999;
   align-self: center;
   flex-shrink: 0;
-  padding-bottom: 30rpx;
-  margin-left: 10rpx;
-  margin-right: 10rpx;
+  margin: 0 26rpx;
 }
 
 /* 已盘数量颜色 */
@@ -691,7 +700,7 @@
   color: #c0c4cc !important;
 }
 
-/* 本次增加输入 */
+/* 实盘库存输入 */
 .qty-flow-input-wrap {
   display: flex;
   align-items: center;

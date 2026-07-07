@@ -20,11 +20,11 @@ Page({
     searched: false,
     searchResults: [],
     currentItem: null,
-    quantityDisplay: '',      // 库存数量（quantity）
-    checkQuantityDisplay: '--',  // 已统计数量（check_quantity）
-    checkQtyClass: '',       // 颜色类：qty-red/qty-green/qty-yellow
+    quantityDisplay: '',          // 记录库存（quantity）
+    checkQuantityDisplay: '',     // 已盘数量（check_quantity），只读展示
+    checkQtyClass: '',            // 已盘数量颜色：qty-red/green/yellow/gray
     isItemExpired: false,
-    actualQty: '',           // 本次输入的实际清点数量
+    actualQty: '',               // 实盘库存（本次要追加的数量），默认=max(0,库存−已盘)
 
     // 提交相关
     startLoading: false,
@@ -41,14 +41,14 @@ Page({
     showSuccessOverlay: false,
     successOverlayMsg: '',
 
-    // 计算属性（对齐 Vue newDelta / checkQtyClass）
+    // 计算属性（预计差值等）
     computedDelta: null,
-    deltaPreview: null,         // quantity - check_quantity - actualQty
+    deltaPreview: null,         // 记录库存 − 已盘数量 − 实盘库存
     deltaPreviewDisplay: '',    // 格式化后的预计差值显示
     deltaClass: '',             // delta-loss / delta-overage / delta-ok
-    submitBtnText: '提交统计结果',
+    submitBtnText: '提交盘点结果',
     isChecked: false,
-    showAlreadyCheckedHint: false,  // 已盘==库存 但本次输入会改变已盘数量
+    showAlreadyCheckedHint: false,  // 已盘点物品二次修改提示
 
     // 货位相关
     showAllocationDialog: false,
@@ -197,7 +197,7 @@ Page({
       searchResults: [],
       currentItem: null,
       quantityDisplay: '',
-      checkQuantityDisplay: '--',
+      checkQuantityDisplay: '',
       checkQtyClass: '',
       isItemExpired: false,
       actualQty: '',
@@ -257,36 +257,30 @@ Page({
     const item = itemOrEvent.currentTarget ? itemOrEvent.currentTarget.dataset.item : itemOrEvent
     if (!item) return
 
-    const checkQty = parseFloat(item.check_quantity) || 0
     const quantity = Number(item.quantity) || 0
+    const countedQty = Number(item.check_quantity) || 0
 
-    // 颜色：0→灰色，<库存→红色，==→绿色，>→黄色（对齐 Vue checkQtyClass）
+    // 已盘数量颜色：0→灰，<库存→红，==→绿，>→黄
     let checkQtyClass = ''
-    if (checkQty === 0) {
-      checkQtyClass = 'qty-gray'
-    } else if (checkQty < quantity) {
-      checkQtyClass = 'qty-red'
-    } else if (checkQty === quantity) {
-      checkQtyClass = 'qty-green'
-    } else {
-      checkQtyClass = 'qty-yellow'
-    }
+    if (countedQty === 0) checkQtyClass = 'qty-gray'
+    else if (countedQty < quantity) checkQtyClass = 'qty-red'
+    else if (countedQty === quantity) checkQtyClass = 'qty-green'
+    else checkQtyClass = 'qty-yellow'
 
-    // 默认 0，强制用户手动录入本次数量，避免盲目提交
-    const actualQty = '0'
-
-    // 已盘数量 == 库存时，提示用户
-    const showAlreadyCheckedHint = checkQty === quantity && quantity > 0
+    // 实盘库存默认预填 = max(0, 记录库存 − 已盘数量)
+    // 首次盘点：= 库存；已盘满后：= 0 方便累加；已盘超：= 0
+    const prefill = Math.max(0, quantity - countedQty)
+    const actualQty = prefill > 0 ? this.formatNum(prefill) : '0'
 
     this.setData({
       currentItem: item,
       quantityDisplay: quantity.toString(),
-      checkQuantityDisplay: checkQty.toString(),
+      checkQuantityDisplay: this.formatNum(countedQty),
       checkQtyClass,
       isItemExpired: item.expire_date ? new Date(item.expire_date) < new Date() : false,
       actualQty,
       isChecked: item.ischecked === true,
-      showAlreadyCheckedHint
+      showAlreadyCheckedHint: false
     })
 
     // 自动填入后计算期望差值
@@ -297,7 +291,7 @@ Page({
     this.setData({
       currentItem: null,
       quantityDisplay: '',
-      checkQuantityDisplay: '--',
+      checkQuantityDisplay: '',
       checkQtyClass: '',
       isItemExpired: false,
       actualQty: '',
@@ -331,24 +325,25 @@ Page({
   },
 
   calculateDelta() {
-    const { currentItem, actualQty } = this.data
+    const { currentItem, actualQty, isChecked } = this.data
     if (!currentItem || actualQty === '') {
       this.setData({
         deltaPreview: null,
         deltaPreviewDisplay: '',
         deltaClass: '',
-        submitBtnText: '提交统计结果'
+        submitBtnText: '提交盘点结果',
+        showAlreadyCheckedHint: false
       })
       return
     }
 
     const quantity = Number(currentItem.quantity) || 0
-    const checkQty = Number(currentItem.check_quantity) || 0
-    const actQty = Number(actualQty)
-    if (isNaN(actQty)) return
+    const countedQty = Number(currentItem.check_quantity) || 0
+    const inputQty = Number(actualQty)
+    if (isNaN(inputQty)) return
 
-    // 新公式（对齐 Vue newDelta）： quantity - check_quantity - actualQty
-    const deltaPreview = quantity - checkQty - actQty
+    // 预计差值 = 记录库存 − 已盘数量 − 实盘库存（对应后端 delta = recorded_qty − check_quantity）
+    const deltaPreview = quantity - countedQty - inputQty
     const absDelta = Math.abs(deltaPreview)
     let deltaClass = '', submitBtnText = '提交盘点结果'
 
@@ -363,11 +358,15 @@ Page({
       submitBtnText = '✓ 提交盘点结果'
     }
 
+    // 已盘点物品二次修改提示（仅当本次结果与已盘不符时）
+    const showAlreadyCheckedHint = isChecked && deltaPreview !== 0
+
     this.setData({
       deltaPreview,
       deltaPreviewDisplay: absDelta > 0 ? this.formatNum(absDelta) : '0',
       deltaClass,
-      submitBtnText
+      submitBtnText,
+      showAlreadyCheckedHint
     })
   },
 
@@ -385,53 +384,59 @@ Page({
   handleSubmitCheck() {
     const { currentItem, actualQty, submitLoading } = this.data
     if (!currentItem || actualQty === '') {
-      wx.showToast({ title: '请输入本次清点数量', icon: 'none' })
+      wx.showToast({ title: '请输入实盘库存数量', icon: 'none' })
       return
     }
     if (submitLoading) return
 
-    // 防误操作：本次增加=0 且 记录库存≠已盘数量 时（即提交0会产生报损/报溢），弹窗二次确认
-    const actNum = Number(actualQty) || 0
+    const inputNum = Number(actualQty) || 0
     const stockQty = Number(currentItem.quantity) || 0
     const countedQty = Number(currentItem.check_quantity) || 0
 
-    if (actNum === 0 && stockQty !== countedQty) {
-      const itemName = currentItem.name || '该物品'
-      const lossAmount = stockQty - countedQty  // >0 报损, <0 报溢
-      const displayAmount = this.formatNum(Math.abs(lossAmount))
-      const typeLabel = lossAmount > 0 ? '报损' : '报溢'
-      const self = this
-      // 用 setTimeout 确保从 tap 事件返回后再弹 modal，避免事件冲突
-      setTimeout(() => {
-        wx.showModal({
-          title: `确认${typeLabel}`,
-          content: `本次增加为 0，将把「${itemName}」的数量【${displayAmount} 个】进行【${typeLabel}】确认执行？`,
-          confirmText: `确认${typeLabel} ${displayAmount}`,
-          confirmColor: '#ee0a24',
-          cancelText: '取消',
-          success(res) {
-            if (res.confirm) {
-              self._doSubmit()
+    // 防误操作：实盘库存=0 时二次确认 / 溢出阻断
+    if (inputNum === 0) {
+      if (stockQty > countedQty) {
+        // 已盘不足库存，提交0 → 报损差异部分
+        const itemName = currentItem.name || '该物品'
+        const lossAmount = stockQty - countedQty
+        const displayAmount = this.formatNum(lossAmount)
+        const self = this
+        setTimeout(() => {
+          wx.showModal({
+            title: '确认报损',
+            content: `实盘库存为 0，将把「${itemName}」的剩余数量【${displayAmount}】全部报损，确认执行？`,
+            confirmText: `确认报损 ${displayAmount}`,
+            confirmColor: '#ee0a24',
+            cancelText: '取消',
+            success(res) {
+              if (res.confirm) self._doSubmit()
+            },
+            fail() {
+              wx.showModal({
+                title: '确认报损',
+                content: `将把「${itemName}」的剩余数量【${displayAmount}】进行报损，确认执行？`,
+                confirmText: '确认',
+                confirmColor: '#ee0a24',
+                cancelText: '取消',
+                success(res2) { if (res2.confirm) self._doSubmit() }
+              })
             }
-          },
-          fail() {
-            // wx.showModal 异常时用 toast 代替确认
-            wx.showModal({
-              title: `确认${typeLabel}`,
-              content: `将把「${itemName}」的数量【${displayAmount}】进行【${typeLabel}】，确认执行？`,
-              confirmText: '确认',
-              confirmColor: '#ee0a24',
-              cancelText: '取消',
-              success(res2) {
-                if (res2.confirm) {
-                  self._doSubmit()
-                }
-              }
-            })
-          }
+          })
+        }, 50)
+        return
+      }
+
+      if (stockQty < countedQty) {
+        // 已盘已超出库存，提交0会导致后端重复报溢 — 阻断
+        wx.showToast({
+          title: '已盘数量已超出记录库存，请填写本次实际新增数量',
+          icon: 'none',
+          duration: 2500
         })
-      }, 50)
-      return
+        return
+      }
+
+      // stockQty === countedQty，提交0为无害 no-op
     }
 
     this._doSubmit()
@@ -439,6 +444,7 @@ Page({
 
   async _doSubmit() {
     const { currentItem, actualQty } = this.data
+    const inputQty = Number(actualQty) || 0
 
     this.setData({ submitLoading: true })
     wx.vibrateShort({ type: 'medium' })
@@ -447,9 +453,10 @@ Page({
       const { specifiedAllocationId, autoLinkEnabled } = this.data
       const itemAllocationId = currentItem.allocation_id || null
 
+      // 实盘库存 = 本次要追加的数量（增量），后端 check_quantity += actual_qty
       const payload = {
         stock_goods_id: currentItem.id,
-        actual_qty: actualQty
+        actual_qty: String(inputQty)
       }
 
       // 仅当自动关联开启 + 全局货位已设置 + 与物品当前货位不同时，才带 allocation_id
@@ -480,13 +487,6 @@ Page({
       const isEnabled = result.is_enable
       const sheetType = result.sheet_type  // 'loss' | 'overflow' | null
 
-      // 颜色判断：使用后端返回的最新 quantity
-      let checkQtyClass = ''
-      if (chkNum === 0) checkQtyClass = 'qty-gray'
-      else if (chkNum < newQuantity) checkQtyClass = 'qty-red'
-      else if (chkNum === newQuantity) checkQtyClass = 'qty-green'
-      else checkQtyClass = 'qty-yellow'
-
       wx.vibrateShort({ type: 'medium' })
       setTimeout(() => { wx.vibrateShort({ type: 'medium' }) }, 100)
 
@@ -516,7 +516,18 @@ Page({
 
       this.setData({ searchResults: finalResults })
 
-      // ── 更新 currentItem（即时反映后端最新状态） ──
+      // ── 更新 currentItem 并重新计算 checkQtyClass 与实盘库存预填 ──
+      const newCountedQty = parseFloat(newCheckQty) || 0
+      let checkQtyClass = ''
+      if (newCountedQty === 0) checkQtyClass = 'qty-gray'
+      else if (newCountedQty < newQuantity) checkQtyClass = 'qty-red'
+      else if (newCountedQty === newQuantity) checkQtyClass = 'qty-green'
+      else checkQtyClass = 'qty-yellow'
+
+      // 提交后预填下次实盘库存 = max(0, 记录库存 − 已盘数量)
+      const nextPrefill = Math.max(0, newQuantity - newCountedQty)
+      const nextActualQty = nextPrefill > 0 ? this.formatNum(nextPrefill) : '0'
+
       this.setData({
         currentItem: {
           ...currentItem,
@@ -528,8 +539,9 @@ Page({
           allocation_name: result.allocation_name
         },
         quantityDisplay: String(newQuantity),
-        checkQuantityDisplay: String(chkNum),
+        checkQuantityDisplay: this.formatNum(newCheckQty || 0),
         checkQtyClass,
+        actualQty: nextActualQty,
         isChecked: true
       })
 

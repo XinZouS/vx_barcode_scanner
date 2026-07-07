@@ -30,7 +30,7 @@ Page({
 
     // 表单
     formBatch: '',
-    formQuantity: '',
+    formQuantity: '1',
     formCost: '',
     formProductionDate: '',
     formExpireDate: '',
@@ -283,7 +283,7 @@ Page({
       editingSheetGoodsId: null,
       selectedItem: null,
       formBatch: '',
-      formQuantity: '',
+      formQuantity: '1',
       formCost: '',
       formProductionDate: '',
       formExpireDate: '',
@@ -481,7 +481,7 @@ Page({
         editingSheetGoodsId: null,
         selectedItem: null,
         formBatch: '',
-        formQuantity: '',
+        formQuantity: '1',
         formCost: '',
         formProductionDate: '',
         formExpireDate: '',
