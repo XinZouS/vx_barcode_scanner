@@ -21,10 +21,8 @@ Page({
     searchResults: [],
     currentItem: null,
     quantityDisplay: '',          // 记录库存（quantity）
-    checkQuantityDisplay: '',     // 已盘数量（check_quantity），只读展示
-    checkQtyClass: '',            // 已盘数量颜色：qty-red/green/yellow/gray
     isItemExpired: false,
-    actualQty: '',               // 实盘库存（本次要追加的数量），默认=max(0,库存−已盘)
+    actualQty: '',               // 实际库存（quantity_real），默认=记录库存
 
     // 提交相关
     startLoading: false,
@@ -42,10 +40,9 @@ Page({
     successOverlayMsg: '',
 
     // 计算属性（预计差值等）
-    computedDelta: null,
-    deltaPreview: null,         // 记录库存 − 已盘数量 − 实盘库存
+    deltaPreview: null,         // 实际库存 − 记录库存（与后端 delta 同向）
     deltaPreviewDisplay: '',    // 格式化后的预计差值显示
-    deltaClass: '',             // delta-loss / delta-overage / delta-ok
+    deltaClass: '',             // delta-overage / delta-loss / delta-ok
     submitBtnText: '提交盘点结果',
     isChecked: false,
     showAlreadyCheckedHint: false,  // 已盘点物品二次修改提示
@@ -197,15 +194,12 @@ Page({
       searchResults: [],
       currentItem: null,
       quantityDisplay: '',
-      checkQuantityDisplay: '',
-      checkQtyClass: '',
       isItemExpired: false,
       actualQty: '',
-      computedDelta: null,
       deltaPreview: null,
       deltaPreviewDisplay: '',
       deltaClass: '',
-      submitBtnText: '提交统计结果',
+      submitBtnText: '提交盘点结果',
       isChecked: false,
       showAlreadyCheckedHint: false
     })
@@ -234,9 +228,9 @@ Page({
         this.setData({ searched: true, searchResults: [], currentItem: null })
       } else if (data.length === 1) {
         this.selectItem(data[0])
-        this.setData({ searched: true, searchResults: this._formatCheckQty(data) })
+        this.setData({ searched: true, searchResults: data })
       } else {
-        this.setData({ searched: true, searchResults: this._formatCheckQty(data) })
+        this.setData({ searched: true, searchResults: data })
       }
     } catch (err) {
       this.showError(err)
@@ -246,44 +240,24 @@ Page({
     }
   },
 
-  _formatCheckQty(list) {
-    return list.map(item => ({
-      ...item,
-      check_quantity_display: this.formatNum(item.check_quantity || 0)
-    }))
-  },
-
   selectItem(itemOrEvent) {
     const item = itemOrEvent.currentTarget ? itemOrEvent.currentTarget.dataset.item : itemOrEvent
     if (!item) return
 
     const quantity = Number(item.quantity) || 0
-    const countedQty = Number(item.check_quantity) || 0
 
-    // 已盘数量颜色：0→灰，<库存→红，==→绿，>→黄
-    let checkQtyClass = ''
-    if (countedQty === 0) checkQtyClass = 'qty-gray'
-    else if (countedQty < quantity) checkQtyClass = 'qty-red'
-    else if (countedQty === quantity) checkQtyClass = 'qty-green'
-    else checkQtyClass = 'qty-yellow'
-
-    // 实盘库存默认预填 = max(0, 记录库存 − 已盘数量)
-    // 首次盘点：= 库存；已盘满后：= 0 方便累加；已盘超：= 0
-    const prefill = Math.max(0, quantity - countedQty)
-    const actualQty = prefill > 0 ? this.formatNum(prefill) : '0'
+    // 实际库存默认填入记录库存，用户核对后直接提交或手动修改
+    const actualQty = quantity > 0 ? this.formatNum(quantity) : '0'
 
     this.setData({
       currentItem: item,
       quantityDisplay: quantity.toString(),
-      checkQuantityDisplay: this.formatNum(countedQty),
-      checkQtyClass,
       isItemExpired: item.expire_date ? new Date(item.expire_date) < new Date() : false,
       actualQty,
       isChecked: item.ischecked === true,
       showAlreadyCheckedHint: false
     })
 
-    // 自动填入后计算期望差值
     this.calculateDelta()
   },
 
@@ -291,8 +265,6 @@ Page({
     this.setData({
       currentItem: null,
       quantityDisplay: '',
-      checkQuantityDisplay: '',
-      checkQtyClass: '',
       isItemExpired: false,
       actualQty: '',
       deltaPreview: null,
@@ -310,17 +282,61 @@ Page({
     this.calculateDelta()
   },
 
+  /**
+   * 输入框 blur 时格式化实际库存：
+   * - 仅允许数字、小数点、负号
+   * - 去除多余的前导零与尾随零
+   * 例如 "-02.3400" → "-2.34", "3.3333" 保持不变
+   */
+  onActualQtyBlur(e) {
+    const raw = (e.detail.value || '').trim()
+    if (raw === '' || raw === '-') {
+      this.setData({ actualQty: '' })
+      this.calculateDelta()
+      return
+    }
+    const formatted = this.formatRealQty(raw)
+    this.setData({ actualQty: formatted })
+    this.calculateDelta()
+  },
+
+  /**
+   * 格式化实际库存输入：去除无效字符 → 标准化为数字字符串
+   */
+  formatRealQty(raw) {
+    // 去掉所有非法字符，只保留数字、负号、小数点
+    let cleaned = raw.replace(/[^0-9.\-]/g, '')
+    // 负号只能在开头，移除其他位置的负号
+    const firstMinus = cleaned.indexOf('-')
+    if (firstMinus > 0) {
+      cleaned = cleaned.replace(/-/g, '')
+    } else if (firstMinus === 0) {
+      cleaned = '-' + cleaned.slice(1).replace(/-/g, '')
+    }
+    // 只保留第一个小数点
+    const dotIdx = cleaned.indexOf('.')
+    if (dotIdx >= 0) {
+      const before = cleaned.slice(0, dotIdx + 1)
+      const after = cleaned.slice(dotIdx + 1).replace(/\./g, '')
+      cleaned = before + after
+    }
+    // 转数字再转回字符串，自动去除前导零和尾随零
+    const num = parseFloat(cleaned)
+    if (isNaN(num)) return ''
+    return String(num)
+  },
+
   onQtyMinus() {
     const { actualQty } = this.data
     const v = parseFloat(actualQty) || 0
-    this.setData({ actualQty: (v - 1).toString() })
+    this.setData({ actualQty: String(v - 1) })
     this.calculateDelta()
   },
 
   onQtyPlus() {
     const { actualQty } = this.data
     const v = parseFloat(actualQty) || 0
-    this.setData({ actualQty: (v + 1).toString() })
+    this.setData({ actualQty: String(v + 1) })
     this.calculateDelta()
   },
 
@@ -338,27 +354,27 @@ Page({
     }
 
     const quantity = Number(currentItem.quantity) || 0
-    const countedQty = Number(currentItem.check_quantity) || 0
     const inputQty = Number(actualQty)
     if (isNaN(inputQty)) return
 
-    // 预计差值 = 记录库存 − 已盘数量 − 实盘库存（对应后端 delta = recorded_qty − check_quantity）
-    const deltaPreview = quantity - countedQty - inputQty
+    // 预计差值 = 实际库存 − 记录库存（与后端 delta = quantity_real − recorded_qty 一致）
+    const deltaPreview = inputQty - quantity
     const absDelta = Math.abs(deltaPreview)
     let deltaClass = '', submitBtnText = '提交盘点结果'
 
     if (deltaPreview > 0) {
-      deltaClass = 'delta-loss'
-      submitBtnText = '提交盘点结果（预计报损）'
-    } else if (deltaPreview < 0) {
+      // 实多 → 报溢
       deltaClass = 'delta-overage'
       submitBtnText = '提交盘点结果（预计报溢）'
+    } else if (deltaPreview < 0) {
+      // 实少 → 报损
+      deltaClass = 'delta-loss'
+      submitBtnText = '提交盘点结果（预计报损）'
     } else {
       deltaClass = 'delta-ok'
       submitBtnText = '✓ 提交盘点结果'
     }
 
-    // 已盘点物品二次修改提示（仅当本次结果与已盘不符时）
     const showAlreadyCheckedHint = isChecked && deltaPreview !== 0
 
     this.setData({
@@ -384,59 +400,42 @@ Page({
   handleSubmitCheck() {
     const { currentItem, actualQty, submitLoading } = this.data
     if (!currentItem || actualQty === '') {
-      wx.showToast({ title: '请输入实盘库存数量', icon: 'none' })
+      wx.showToast({ title: '请输入实际库存数量', icon: 'none' })
       return
     }
     if (submitLoading) return
 
     const inputNum = Number(actualQty) || 0
     const stockQty = Number(currentItem.quantity) || 0
-    const countedQty = Number(currentItem.check_quantity) || 0
 
-    // 防误操作：实盘库存=0 时二次确认 / 溢出阻断
-    if (inputNum === 0) {
-      if (stockQty > countedQty) {
-        // 已盘不足库存，提交0 → 报损差异部分
-        const itemName = currentItem.name || '该物品'
-        const lossAmount = stockQty - countedQty
-        const displayAmount = this.formatNum(lossAmount)
-        const self = this
-        setTimeout(() => {
-          wx.showModal({
-            title: '确认报损',
-            content: `实盘库存为 0，将把「${itemName}」的剩余数量【${displayAmount}】全部报损，确认执行？`,
-            confirmText: `确认报损 ${displayAmount}`,
-            confirmColor: '#ee0a24',
-            cancelText: '取消',
-            success(res) {
-              if (res.confirm) self._doSubmit()
-            },
-            fail() {
-              wx.showModal({
-                title: '确认报损',
-                content: `将把「${itemName}」的剩余数量【${displayAmount}】进行报损，确认执行？`,
-                confirmText: '确认',
-                confirmColor: '#ee0a24',
-                cancelText: '取消',
-                success(res2) { if (res2.confirm) self._doSubmit() }
-              })
-            }
-          })
-        }, 50)
-        return
-      }
-
-      if (stockQty < countedQty) {
-        // 已盘已超出库存，提交0会导致后端重复报溢 — 阻断
-        wx.showToast({
-          title: '已盘数量已超出记录库存，请填写本次实际新增数量',
-          icon: 'none',
-          duration: 2500
+    // 防误操作：实际库存=0 且记录库存>0 时，二次确认报损
+    if (inputNum === 0 && stockQty > 0) {
+      const itemName = currentItem.name || '该物品'
+      const displayAmount = this.formatNum(stockQty)
+      const self = this
+      setTimeout(() => {
+        wx.showModal({
+          title: '确认报损',
+          content: `实际库存为 0，将把「${itemName}」的全部数量【${displayAmount}】进行报损，确认执行？`,
+          confirmText: `确认报损 ${displayAmount}`,
+          confirmColor: '#ee0a24',
+          cancelText: '取消',
+          success(res) {
+            if (res.confirm) self._doSubmit()
+          },
+          fail() {
+            wx.showModal({
+              title: '确认报损',
+              content: `将把「${itemName}」的全部数量【${displayAmount}】进行报损，确认执行？`,
+              confirmText: '确认',
+              confirmColor: '#ee0a24',
+              cancelText: '取消',
+              success(res2) { if (res2.confirm) self._doSubmit() }
+            })
+          }
         })
-        return
-      }
-
-      // stockQty === countedQty，提交0为无害 no-op
+      }, 50)
+      return
     }
 
     this._doSubmit()
@@ -453,10 +452,10 @@ Page({
       const { specifiedAllocationId, autoLinkEnabled } = this.data
       const itemAllocationId = currentItem.allocation_id || null
 
-      // 实盘库存 = 本次要追加的数量（增量），后端 check_quantity += actual_qty
+      // 发送 quantity_real（实际库存），后端计算 delta 并处理报损/报溢
       const payload = {
         stock_goods_id: currentItem.id,
-        actual_qty: String(inputQty)
+        quantity_real: String(inputQty)
       }
 
       // 仅当自动关联开启 + 全局货位已设置 + 与物品当前货位不同时，才带 allocation_id
@@ -481,8 +480,6 @@ Page({
 
       // ── 使用后端返回的最新数据 ──
       const newQuantity = Number(result.quantity) || 0
-      const newCheckQty = result.check_quantity != null ? String(result.check_quantity) : '0'
-      const chkNum = parseFloat(newCheckQty) || 0
       const delta = parseFloat(result.delta) || 0
       const isEnabled = result.is_enable
       const sheetType = result.sheet_type  // 'loss' | 'overflow' | null
@@ -498,8 +495,6 @@ Page({
             ...item,
             ischecked: true,
             quantity: String(newQuantity),
-            check_quantity: newCheckQty,
-            check_quantity_display: this.formatNum(newCheckQty || 0),
             quantity_display: this.formatNum(newQuantity || 0),
             is_enable: isEnabled,
             allocation_id: result.allocation_id,
@@ -516,32 +511,18 @@ Page({
 
       this.setData({ searchResults: finalResults })
 
-      // ── 更新 currentItem 并重新计算 checkQtyClass 与实盘库存预填 ──
-      const newCountedQty = parseFloat(newCheckQty) || 0
-      let checkQtyClass = ''
-      if (newCountedQty === 0) checkQtyClass = 'qty-gray'
-      else if (newCountedQty < newQuantity) checkQtyClass = 'qty-red'
-      else if (newCountedQty === newQuantity) checkQtyClass = 'qty-green'
-      else checkQtyClass = 'qty-yellow'
-
-      // 提交后预填下次实盘库存 = max(0, 记录库存 − 已盘数量)
-      const nextPrefill = Math.max(0, newQuantity - newCountedQty)
-      const nextActualQty = nextPrefill > 0 ? this.formatNum(nextPrefill) : '0'
-
+      // ── 更新 currentItem（后端已更新 quantity=quantity_real） ──
       this.setData({
         currentItem: {
           ...currentItem,
           quantity: String(newQuantity),
-          check_quantity: newCheckQty,
           is_enable: isEnabled,
           ischecked: true,
           allocation_id: result.allocation_id,
           allocation_name: result.allocation_name
         },
         quantityDisplay: String(newQuantity),
-        checkQuantityDisplay: this.formatNum(newCheckQty || 0),
-        checkQtyClass,
-        actualQty: nextActualQty,
+        actualQty: String(newQuantity),   // 提交后预填 = 更新后的库存，方便再次修改
         isChecked: true
       })
 
@@ -551,16 +532,15 @@ Page({
         this.setData({ uncheckedList: updatedUnchecked })
       }
 
-      // ── 成功提示：基于 sheet_type / delta 给更精确的反馈 ──
-      const displayQty = this.formatNum(chkNum)
+      // ── 成功提示：基于 sheet_type / delta ──
       if (sheetType === 'loss') {
-        this.showLargeSuccess(`已盘 ${displayQty}，自动报损 ${this.formatNum(delta)}`)
+        this.showLargeSuccess(`已盘 ${this.formatNum(newQuantity)}，自动报损 ${this.formatNum(Math.abs(delta))}`)
       } else if (sheetType === 'overflow') {
-        this.showLargeSuccess(`已盘 ${displayQty}，自动报溢 ${this.formatNum(Math.abs(delta))}`)
+        this.showLargeSuccess(`已盘 ${this.formatNum(newQuantity)}，自动报溢 ${this.formatNum(delta)}`)
       } else if (delta === 0) {
-        this.showLargeSuccess('数量相符 ✓')
+        this.showLargeSuccess('✓ 数量相符')
       } else {
-        this.showLargeSuccess(`已盘 ${displayQty}`)
+        this.showLargeSuccess(`已盘 ${this.formatNum(newQuantity)}`)
       }
 
       await this.fetchProgress()
@@ -585,23 +565,14 @@ Page({
 
   // ========== 完成统计相关 ==========
 
-  /**
-   * 显示完成统计/重新开始 菜单
-   */
   showFinishMenu() {
     this.setData({ showFinishMenu: !this.data.showFinishMenu })
   },
 
-  /**
-   * 隐藏菜单
-   */
   hideFinishMenu() {
     this.setData({ showFinishMenu: false })
   },
 
-  /**
-   * 连续扫码 toggle：开启后提交成功自动打开扫码
-   */
   toggleContinuousScan() {
     const newVal = !this.data.continuousScan
     this.setData({ continuousScan: newVal })
@@ -613,9 +584,6 @@ Page({
     })
   },
 
-  /**
-   * 强制重新开始（跳过完成统计）
-   */
   handleForceRestart() {
     wx.showModal({
       title: '重新开始',
@@ -631,13 +599,10 @@ Page({
     })
   },
 
-  /**
-   * 完成统计：弹窗确认后调用 finish/ 接口
-   */
   handleFinishCheck() {
     wx.showModal({
       title: '完成统计',
-      content: '将完成本次统计并清除“已记录”标记，报损与报溢明细请在“账务商品查询”页面查看。\n确认完成统计吗？',
+      content: '将完成本次统计并清除"已记录"标记，报损与报溢明细请在"账务商品查询"页面查看。\n确认完成统计吗？',
       confirmText: '确认',
       cancelText: '取消',
       success: async (res) => {
@@ -661,9 +626,7 @@ Page({
     })
   },
 
-  /**
-   * 打开货位弹窗（指定货位 + 当前货位 共用）
-   */
+  // ========== 货位相关 ==========
   async openAllocationDialog() {
     await this.fetchAllocations()
     this.setData({
@@ -685,10 +648,6 @@ Page({
   },
 
   // ========== 未记录列表 ==========
-
-  /**
-   * 将 /stock/goods/ 嵌套结构扁平化为 goods_search 风格
-   */
   _normalizeGoodsItem(nested) {
     const gi = nested.goodsproperty?.goodsinfo || {}
     return {
@@ -703,12 +662,10 @@ Page({
       expire_date: nested.expire_date || '',
       production_date: nested.production_date || '',
       quantity: nested.quantity || '0',
-      check_quantity: nested.check_quantity || '',
       ischecked: nested.ischecked,
       allocation_name: nested.goodsproperty?.allocation_name || '',
       allocation_id: nested.allocation_id || null,
-      quantity_display: this.formatNum(nested.quantity || 0),
-      check_quantity_display: this.formatNum(nested.check_quantity || 0)
+      quantity_display: this.formatNum(nested.quantity || 0)
     }
   },
 
@@ -716,7 +673,6 @@ Page({
     const { uncheckedLoading, uncheckedList } = this.data
     if (uncheckedLoading) return
 
-    // toggle：已展开则关闭
     if (uncheckedList.length > 0) {
       this.clearUnchecked()
       return
@@ -822,13 +778,11 @@ Page({
   },
 
   // ========== 货位列表获取/搜索/新增 ==========
-
   async fetchAllocations() {
     if (this.data.allocationLoading) return
 
     this.setData({ allocationLoading: true })
     try {
-      // fields=id_name 触发后端跳过 paginator，返回全量货位列表
       const data = await request.get('/goods/allocation/', { fields: 'id_name' })
       const results = (data && data.results) || data || []
 
@@ -894,11 +848,8 @@ Page({
         formData.updateuser = currentUser.id
       }
 
-      // request.js 返回 data.data = 后端返回体
-      // 新增接口直接返回 { id, name, ... } 对象（不是 { results } 列表）
       const res = await request.post('/goods/allocation/', formData)
 
-      // 兼容两种返回结构
       const newAlloc = res.id ? res : (res.results && res.results[0])
       if (!newAlloc) {
         wx.showToast({ title: '创建成功但未返回数据', icon: 'none' })
@@ -907,7 +858,6 @@ Page({
 
       wx.showToast({ title: `货位「${newAlloc.name}」创建成功`, icon: 'success' })
 
-      // 将新货位插入列表前面，弹窗中预选中，只关创建弹窗
       const { allocationList } = this.data
       const updatedList = [newAlloc, ...allocationList]
 
@@ -916,7 +866,6 @@ Page({
         filteredAllocations: updatedList,
         selectedAllocationId: newAlloc.id,
         showCreateAllocationDialog: false,
-        // 不关 showAllocationDialog，让用户继续点"确定"
         newAllocationName: ''
       })
     } catch (err) {

@@ -111,7 +111,7 @@
     </view>
     <view class="auto-link-row">
       <text class="auto-link-label">自动关联</text>
-      <switch checked="{{autoLinkEnabled}}" bindchange="onAutoLinkChange" color="#5cb85c" />
+      <switch class="auto-link-switch" checked="{{autoLinkEnabled}}" bindchange="onAutoLinkChange" color="#5cb85c" />
     </view>
   </view>
 
@@ -146,7 +146,7 @@
         <view class="result-meta-row">
           <text class="result-meta">批号:{{item.batch || '--'}} · 数量：</text>
           <text class="result-qty">{{item.quantity || 0}}</text>
-          <text class="result-checked" style="margin-left:auto;color:{{(item.quantity - 0) == (item.check_quantity - 0) ? '#67c23a' : ( (item.quantity - 0) > (item.check_quantity - 0) ? '#f56c6c' : '#e6a23c')}}">· 已记录：{{item.check_quantity_display || 0}}</text>
+          <text class="result-checked" style="margin-left:auto;color:{{item.ischecked === true ? '#67c23a' : (item.ischecked === false ? '#f56c6c' : '#c0c4cc')}}">{{item.ischecked === true ? '✓ 已记录' : (item.ischecked === false ? '待记录' : '')}}</text>
         </view>
       </view>
     </view>
@@ -197,69 +197,65 @@
     <!-- 绿色分隔线 — 对齐 Vue card-divider -->
     <view class="card-divider"></view>
 
-    <!-- 数量四段流：记录库存 − 已盘数量 → 实盘库存 = 预计差值 -->
+    <!-- 数量三段流：记录库存 → 实际库存 → 预计差值 -->
     <view class="qty-flow">
-      <!-- Row 1：记录库存 − 已盘数量（只读参考） -->
-      <view class="qty-flow-row qty-flow-row--ref">
+      <!-- Row 1：记录库存 → 实际库存 -->
+      <view class="qty-flow-row qty-flow-row--main">
         <view class="qty-flow-box qty-flow-box--record">
           <text class="qty-flow-label">记录库存</text>
           <text class="qty-flow-value qty-flow-value--big qty-flow-value--record">{{quantityDisplay}}</text>
         </view>
-        <text class="qty-flow-arrow qty-flow-arrow--minus">−</text>
-        <view class="qty-flow-box qty-flow-box--checked">
-          <text class="qty-flow-label">已盘数量</text>
-          <text class="qty-flow-value qty-flow-value--big {{checkQtyClass}}">{{checkQuantityDisplay}}</text>
-        </view>
-      </view>
 
-      <!-- Row 2：实盘库存（本次输入） = 预计差值 -->
-      <view class="qty-flow-row qty-flow-row--input">
+        <text class="qty-flow-arrow">→</text>
+
+        <!-- 实际库存（可编辑输入） -->
         <view class="qty-flow-box qty-flow-box--input">
-          <text class="qty-flow-label">本次增减</text>
+          <text class="qty-flow-label">实际库存</text>
           <view class="qty-flow-input-wrap">
             <view class="qty-btn-minus" bindtap="onQtyMinus">-</view>
             <input
               class="qty-flow-input {{deltaClass}}"
-              type="digit"
               value="{{actualQty}}"
-              placeholder="本次实盘数量"
+              placeholder="实际盘点数量"
               bindinput="onActualQtyInput"
+              bindblur="onActualQtyBlur"
               bindconfirm="handleSubmitCheck"
               adjust-position="{{true}}"
             />
             <view class="qty-btn-plus" bindtap="onQtyPlus">+</view>
           </view>
         </view>
-        <text class="qty-flow-arrow">=</text>
+      </view>
 
-        <!-- 预计差值（记录库存 − 已盘数量 − 实盘库存） -->
-        <view class="qty-flow-box qty-flow-box--delta">
-          <text class="qty-flow-label">预计差值</text>
-          <block wx:if="{{actualQty === ''}}">
-            <text class="qty-flow-value qty-flow-value--muted">—</text>
-          </block>
-          <block wx:elif="{{deltaPreview > 0}}">
-            <text class="qty-flow-value qty-flow-value--big delta-loss">▼ {{deltaPreviewDisplay}}</text>
-            <text class="delta-tag delta-tag--loss">预计报损</text>
-          </block>
-          <block wx:elif="{{deltaPreview < 0}}">
-            <text class="qty-flow-value qty-flow-value--big delta-overage">▲ {{deltaPreviewDisplay}}</text>
-            <text class="delta-tag delta-tag--overflow">预计报溢</text>
-          </block>
-          <block wx:else>
-            <text class="qty-flow-value qty-flow-value--big delta-ok">✓ 相符</text>
-          </block>
-        </view>
+      <!-- Row 2：= 预计差值  ···  结果靠右 -->
+      <view class="qty-flow-row qty-flow-row--delta">
+        <text class="qty-flow-arrow qty-flow-arrow--eq">=</text>
+        <text class="qty-flow-label qty-flow-label--inline">预计差值</text>
+
+        <block wx:if="{{actualQty === ''}}">
+          <text class="qty-flow-value qty-flow-value--muted">—</text>
+        </block>
+        <block wx:elif="{{deltaPreview > 0}}">
+          <text class="qty-flow-value qty-flow-value--big delta-overage">▲ {{deltaPreviewDisplay}}</text>
+          <text class="delta-tag delta-tag--overflow">预计报溢</text>
+        </block>
+        <block wx:elif="{{deltaPreview < 0}}">
+          <text class="qty-flow-value qty-flow-value--big delta-loss">▼ {{deltaPreviewDisplay}}</text>
+          <text class="delta-tag delta-tag--loss">预计报损</text>
+        </block>
+        <block wx:else>
+          <text class="qty-flow-value qty-flow-value--big delta-ok">✓ 相符</text>
+        </block>
       </view>
     </view>
 
     <!-- 已盘点物品二次修改提示 -->
     <view class="already-checked-hint" wx:if="{{showAlreadyCheckedHint && actualQty !== ''}}">
-      <view wx:if="{{deltaPreview > 0}}" class="hint-box hint-box--loss">
-        <text>⚠ 该物品已盘点过，继续追加将产生【 报损 】，确认提交？</text>
+      <view wx:if="{{deltaPreview > 0}}" class="hint-box hint-box--overflow">
+        <text>⚠ 该物品已盘点过，继续提交将产生【 报溢 】，确认提交？</text>
       </view>
-      <view wx:elif="{{deltaPreview < 0}}" class="hint-box hint-box--overflow">
-        <text>⚠ 该物品已盘点过，继续追加将产生【 报溢 】，确认提交？</text>
+      <view wx:elif="{{deltaPreview < 0}}" class="hint-box hint-box--loss">
+        <text>⚠ 该物品已盘点过，继续提交将产生【 报损 】，确认提交？</text>
       </view>
     </view>
 
@@ -324,7 +320,7 @@
         <view class="result-meta-row">
           <text class="result-meta">批号:{{item.batch || '--'}} · 数量：</text>
           <text class="result-qty">{{item.quantity_display || 0}}</text>
-          <text class="result-checked" style="margin-left:auto;color:{{(item.quantity - 0) == (item.check_quantity - 0) ? '#67c23a' : ( (item.quantity - 0) > (item.check_quantity - 0) ? '#f56c6c' : '#e6a23c')}}">· 已记录：{{item.check_quantity_display || 0}}</text>
+          <text class="result-checked" style="margin-left:auto;color:{{item.ischecked === true ? '#67c23a' : (item.ischecked === false ? '#f56c6c' : '#c0c4cc')}}">{{item.ischecked === true ? '✓ 已记录' : (item.ischecked === false ? '待记录' : '')}}</text>
         </view>
       </view>
     </view>

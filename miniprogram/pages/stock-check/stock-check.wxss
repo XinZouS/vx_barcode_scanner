@@ -605,7 +605,7 @@
   border-radius: 2rpx;
 }
 
-/* ─── 数量四段流容器 ─── */
+/* ─── 数量三段流容器 ─── */
 .qty-flow {
   margin: 4rpx 0 8rpx;
 }
@@ -617,19 +617,26 @@
   margin-bottom: 14rpx;
 }
 
-.qty-flow-row--ref {
-  gap: 6rpx;
+/* Row 2 — 预计差值行：内容居中 */
+.qty-flow-row--delta {
+  margin-top: 32rpx;
+  margin-bottom: 0;
+  justify-content: center;
+  align-items: center;
+  gap: 10rpx;
 }
 
-.qty-flow-box--checked {
-  flex: 1;
-}
-
-.qty-flow-arrow--minus {
-  font-size: 44rpx;
-  font-weight: 700;
+.qty-flow-arrow--eq {
+  font-size: 72rpx;
   color: #999;
-  margin: 0 4rpx;
+  flex-shrink: 0;
+  margin-right: 6rpx;
+}
+
+.qty-flow-label--inline {
+  font-size: 38rpx;
+  flex-shrink: 0;
+  margin-right: 0;
 }
 
 /* 数量流方块 */
@@ -663,7 +670,7 @@
 }
 
 .qty-flow-value--big {
-  font-size: 42rpx;
+  font-size: 62rpx;
 }
 
 .qty-flow-value--record {
@@ -681,23 +688,6 @@
   align-self: center;
   flex-shrink: 0;
   margin: 0 26rpx;
-}
-
-/* 已盘数量颜色 */
-.qty-red {
-  color: #f56c6c !important;
-}
-
-.qty-green {
-  color: #67c23a !important;
-}
-
-.qty-yellow {
-  color: #e6a23c !important;
-}
-
-.qty-gray {
-  color: #c0c4cc !important;
 }
 
 /* 实盘库存输入 */
@@ -786,7 +776,7 @@
 
 /* 差值 tag */
 .delta-tag {
-  font-size: 26rpx;
+  font-size: 32rpx;
   padding: 4rpx 14rpx;
   border-radius: 20rpx;
   font-weight: 600;
@@ -1099,6 +1089,10 @@
   font-size: 28rpx;
   color: #999;
   margin-right: 8rpx;
+}
+
+.auto-link-switch {
+  transform: scale(0.7);
 }
 
 /* ===== 弹窗样式 ===== */
