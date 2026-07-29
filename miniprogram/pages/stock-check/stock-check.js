@@ -533,7 +533,9 @@ Page({
       }
 
       // ── 成功提示：基于 sheet_type / delta ──
-      if (sheetType === 'loss') {
+      if (result.already_processed) {
+        wx.showToast({ title: '该商品已处理，无需重复提交', icon: 'none', duration: 2000 })
+      } else if (sheetType === 'loss') {
         this.showLargeSuccess(`已盘 ${this.formatNum(newQuantity)}，自动报损 ${this.formatNum(Math.abs(delta))}`)
       } else if (sheetType === 'overflow') {
         this.showLargeSuccess(`已盘 ${this.formatNum(newQuantity)}，自动报溢 ${this.formatNum(delta)}`)
@@ -546,10 +548,14 @@ Page({
       await this.fetchProgress()
 
       // 清空当前物品卡片
-      if (this.data.searchResults.length > 0) {
-        this.setData({ currentItem: null })
+      this.setData({ currentItem: null })
+
+      // 提交成功后，用当前搜索关键词自动刷新列表（避免已报损商品仍显示在列表中）
+      const remainingKey = this.data.searchKey
+      if (remainingKey && remainingKey.trim()) {
+        this.doSearch()
       } else {
-        this.setData({ currentItem: null, searchKey: '' })
+        this.setData({ searchKey: '' })
       }
 
       // 连续扫码：提交成功后自动打开扫码
