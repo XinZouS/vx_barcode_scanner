@@ -4,7 +4,7 @@
   <view class="header">
     <view class="header-top">
       <view class="title-wrapper">
-        <view class="title">扫码统计</view>
+        <view class="title">{{deptLabel || '扫码统计'}}</view>
       </view>
 
       <view class="header-btns">

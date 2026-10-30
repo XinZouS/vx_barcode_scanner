@@ -29,6 +29,10 @@
   font-size: 44rpx;
   font-weight: bold;
   margin-bottom: 10rpx;
+  /* 标题现在是门店简称，名称过长时省略，避免把右侧按钮挤走 */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .subtitle {

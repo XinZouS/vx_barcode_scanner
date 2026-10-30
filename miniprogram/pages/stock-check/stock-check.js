@@ -4,6 +4,9 @@ const request = require('../../utils/request')
 
 Page({
   data: {
+    // 页面标题（当前门店简称，取不到时回退「扫码统计」）
+    deptLabel: '',
+
     // 统计进度
     progress: {
       checked: 0,
@@ -74,6 +77,7 @@ Page({
     // 本次盘点会话内已提交成功的商品 id（接口成功 = 已盘，用于列表回填时兜底）
     this._submittedCheckedIds = new Set()
     this.fetchProgress()
+    this.loadDeptLabel()
     // 从 storage 恢复全局货位设置
     const saved = wx.getStorageSync('stockCheckAllocation')
     if (saved && saved.id) {
@@ -82,6 +86,44 @@ Page({
         specifiedAllocationName: saved.name || '',
         autoLinkEnabled: saved.autoLink !== false
       })
+    }
+  },
+
+  /**
+   * 页面标题 = 当前登录用户所在门店（dept）。
+   *
+   * 后端 /rbac/login/ 与 /department/switch/ 回包都会带：
+   *   curr_department            门店全名
+   *   curr_department_short_name 门店简称（未设置则空串）
+   *   curr_dept_id               门店 id
+   *
+   * 展示优先级：简称 → 全名 → 不展示（回退「扫码统计」）。
+   */
+  async loadDeptLabel() {
+    const userManager = require('../../utils/user')
+    const userInfo = userManager.getUserInfo() || wx.getStorageSync('userInfo') || {}
+
+    const shortName = userInfo.curr_department_short_name || ''
+    const deptName = userInfo.curr_department || ''
+
+    // 正常路径：登录回包里就有，直接用，不再发额外请求
+    if (shortName || deptName) {
+      this.setData({ deptLabel: shortName || deptName })
+      return
+    }
+
+    // 兜底：本次登录发生在后端补充简称字段之前（本地 userInfo 是旧结构），
+    // 补一次部门详情；取不到就保持「扫码统计」，不打扰用户
+    const rawDept = userInfo.curr_dept_id || userInfo.dept || userInfo.dept_id || ''
+    const deptId = rawDept && typeof rawDept === 'object' ? (rawDept.id || '') : rawDept
+    if (!deptId) return
+
+    try {
+      const dept = await request.get(`/department/${deptId}/`)
+      const label = (dept && (dept.short_name || dept.name)) || ''
+      if (label) this.setData({ deptLabel: label })
+    } catch (err) {
+      // 无该接口权限 / 网络异常：保持原文案
     }
   },
 
