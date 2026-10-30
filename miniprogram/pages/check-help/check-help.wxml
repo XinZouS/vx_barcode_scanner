@@ -1,0 +1,122 @@
+<!--pages/check-help/check-help.wxml-->
+<view class="page">
+
+  <!-- 头部 -->
+  <view class="hero">
+    <view class="hero-title">盘点快速上手</view>
+    <view class="hero-sub">三分钟看懂流程与注意事项</view>
+  </view>
+
+  <!-- 最重要的一条 -->
+  <view class="alert alert--danger">
+    <view class="alert-title">最重要的一条</view>
+    <view class="alert-text">
+      填的「实际库存」是你盘完之后<text class="em">这个批次应该剩多少</text>，
+      不是差异、不是增减。
+    </view>
+  </view>
+
+  <!-- 一、三步流程 -->
+  <view class="card">
+    <view class="card-title">一、盘点三步走</view>
+
+    <view class="step">
+      <view class="step-no">1</view>
+      <view class="step-body">
+        <view class="step-name">开始统计</view>
+        <view class="step-desc">点右上角「开始统计」，本店有效库存（数量 ＞ 0 且已上架）全部标为「待记录」，顶部出现进度条。</view>
+      </view>
+    </view>
+
+    <view class="step">
+      <view class="step-no">2</view>
+      <view class="step-body">
+        <view class="step-name">逐个盘</view>
+        <view class="step-desc">扫条码或搜索品名 → 选中商品 → 填「实际库存」→ 提交。<text class="em">提交那一刻</text>就会比对并生成报损 / 报溢单。</view>
+      </view>
+    </view>
+
+    <view class="step step--last">
+      <view class="step-no">3</view>
+      <view class="step-body">
+        <view class="step-name">收尾</view>
+        <view class="step-desc">盘完点「完成/重开 → 完成统计」，清空标记、进度归零，回到未开始状态。</view>
+      </view>
+    </view>
+
+    <view class="tip-line">可点进度条右侧的「未记录」快速调出还没盘的商品。</view>
+  </view>
+
+  <!-- 二、提交后发生什么 -->
+  <view class="card">
+    <view class="card-title">二、提交后会怎样</view>
+
+    <view class="cmp-row">
+      <view class="cmp-tag cmp-tag--over">实多</view>
+      <view class="cmp-text">实际库存 <text class="em">＞</text> 记录库存 → 自动生成<text class="em">报溢单</text>（差额 × 进价），库存改成你填的数</view>
+    </view>
+
+    <view class="cmp-row">
+      <view class="cmp-tag cmp-tag--loss">实少</view>
+      <view class="cmp-text">实际库存 <text class="em">＜</text> 记录库存 → 自动生成<text class="em">报损单</text>，库存改成你填的数</view>
+    </view>
+
+    <view class="cmp-row">
+      <view class="cmp-tag cmp-tag--ok">相符</view>
+      <view class="cmp-text">两者相等 → 不生成单据，只把这个商品标记为「已记录」</view>
+    </view>
+
+    <view class="tip-line tip-line--danger">
+      单据生成后状态直接是「已完成」，没有二次审核。填错只能去「账务商品查询」作废 / 冲红，提交前再核一眼数字。
+    </view>
+  </view>
+
+  <!-- 三、状态含义 -->
+  <view class="card">
+    <view class="card-title">三、商品状态怎么看</view>
+
+    <view class="status-row">
+      <view class="status-tag status-checked">已记录</view>
+      <view class="status-text">本轮已经提交过数量，库存已按你填的数字落库</view>
+    </view>
+
+    <view class="status-row">
+      <view class="status-tag status-unchecked">待记录</view>
+      <view class="status-text">本轮还没盘，属于「开始统计」打上标记的商品</view>
+    </view>
+
+    <view class="status-row">
+      <view class="status-tag status-unknown">未设置</view>
+      <view class="status-text">不参与本轮：数量为 0、已下架等</view>
+    </view>
+  </view>
+
+  <!-- 四、两个按钮的区别 -->
+  <view class="card">
+    <view class="card-title">四、完成统计 / 重新开始</view>
+
+    <view class="btn-explain">
+      <view class="btn-explain-name">完成统计</view>
+      <view class="btn-explain-desc">结束本轮：清空所有盘点标记、进度归零。<text class="em">不生成</text>报损报溢、<text class="em">不改</text>库存——差异在你每次提交时就已处理完了。</view>
+    </view>
+
+    <view class="btn-explain">
+      <view class="btn-explain-name">重新开始</view>
+      <view class="btn-explain-desc">等于新开一轮，所有有效库存重新变「待记录」。<text class="em em--danger">它不是撤销</text>：已生成的单据、已改的库存和货位都不会回滚。</view>
+    </view>
+  </view>
+
+  <!-- 五、注意事项 -->
+  <view class="card">
+    <view class="card-title">五、注意事项</view>
+
+    <view class="note"><text class="dot">•</text><view class="note-text">同一商品不同批号 / 有效期就是<text class="em">多条库存</text>，要分别盘，不要把数量填成合计数。</view></view>
+    <view class="note"><text class="dot">•</text><view class="note-text">盘到 0 的批次会被置为无效，只保留 1 条 0 数量记录便于查证，下一轮不再出现。</view></view>
+    <view class="note"><text class="dot">•</text><view class="note-text">盘点期间尽量别同时做入库 / 销售 / 调拨，否则「记录库存」一直在变，两次看到可能不一样。</view></view>
+    <view class="note"><text class="dot">•</text><view class="note-text">中途退出、换设备都没关系：盘点标记存在服务器，回到同一门店接着盘即可。</view></view>
+    <view class="note"><text class="dot">•</text><view class="note-text">报损 / 报溢明细统一在「账务商品查询」页面查看。</view></view>
+    <view class="note"><text class="dot">•</text><view class="note-text">右上角「手动报溢」是给<text class="em">还没建档 / 还没有库存</text>的货直接入库用的，不属于盘点流程，不会影响盘点进度。</view></view>
+  </view>
+
+  <view class="footer-space"></view>
+</view>

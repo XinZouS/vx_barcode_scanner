@@ -251,6 +251,64 @@ Page({
     })
   },
 
+  // ========== 新增 / 编辑 物品信息（push 整页表单） ==========
+  /**
+   * 新增物品：push「新增物品信息」页，保存后自动 pop 回本页并带回商品数据
+   */
+  goNewGoods() {
+    wx.navigateTo({
+      url: '/pages/goods-edit/goods-edit?mode=create',
+      events: {
+        goodsSaved: (payload) => this.onGoodsSaved(payload)
+      }
+    })
+  },
+
+  /**
+   * 编辑当前选中商品的物品信息
+   */
+  goEditGoods() {
+    const item = this.data.selectedItem
+    if (!item || !item.id) {
+      wx.showToast({ title: '请先选择商品', icon: 'none' })
+      return
+    }
+    wx.navigateTo({
+      url: `/pages/goods-edit/goods-edit?mode=edit&id=${item.id}`,
+      events: {
+        goodsSaved: (payload) => this.onGoodsSaved(payload)
+      }
+    })
+  },
+
+  /**
+   * 子页面保存成功回调：
+   * - 新增：把新商品填进选中卡片 + 插到查询结果最前面，可直接填报溢数量
+   * - 编辑：用最新数据覆盖卡片与列表中对应行
+   */
+  onGoodsSaved(payload) {
+    if (!payload || !payload.goods || !payload.goods.id) return
+    const goods = payload.goods
+    const searchResults = this.data.searchResults || []
+
+    const idx = searchResults.findIndex(r => r.id === goods.id)
+    const nextResults = idx >= 0
+      ? searchResults.map(r => (r.id === goods.id ? { ...r, ...goods } : r))
+      : [goods, ...searchResults]
+
+    this.setData({
+      searchResults: nextResults,
+      selectedItem: { ...goods },
+      showSearchResults: true
+    })
+
+    // 新增后直接聚焦数量，减少一次点击
+    if (payload.mode === 'create') {
+      this.setData({ focusQuantity: true })
+      wx.showToast({ title: '已新增，请填写报溢批次', icon: 'none', duration: 2000 })
+    }
+  },
+
   /**
    * 点击商品明细 row → 回填表单进入编辑模式
    */

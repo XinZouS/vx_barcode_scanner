@@ -1,0 +1,207 @@
+<!--pages/goods-edit/goods-edit.wxml-->
+<view class="page">
+
+  <!-- 加载中（编辑模式） -->
+  <view class="loading-block" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在加载商品信息...</text>
+  </view>
+
+  <block wx:else>
+    <!-- ===== 基本信息 ===== -->
+    <view class="form-card">
+      <view class="section-title">基本信息</view>
+
+      <view class="form-row">
+        <text class="form-label">药品名称 <text class="required">*</text></text>
+        <input class="form-input" value="{{form.name}}" placeholder="必填，如：阿莫西林胶囊"
+               data-field="name" bindinput="onInput" maxlength="64"
+               adjust-position="{{true}}" cursor-spacing="120" />
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">商品名称</text>
+        <input class="form-input" value="{{form.generalname}}" placeholder="通用名称，可留空"
+               data-field="generalname" bindinput="onInput" maxlength="64"
+               adjust-position="{{true}}" cursor-spacing="120" />
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">规格</text>
+        <input class="form-input" value="{{form.specification}}" placeholder="如 0.25g*24粒"
+               data-field="specification" bindinput="onInput" maxlength="32"
+               adjust-position="{{true}}" cursor-spacing="120" />
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">计量单位</text>
+        <input class="form-input" value="{{form.unit}}" placeholder="盒 / 瓶 / 袋 / 支..."
+               data-field="unit" bindinput="onInput" maxlength="8"
+               adjust-position="{{true}}" cursor-spacing="120" />
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">条形码</text>
+        <input class="form-input" value="{{form.barcode}}" placeholder="扫码或手输"
+               data-field="barcode" bindinput="onInput" maxlength="32" type="number"
+               adjust-position="{{true}}" cursor-spacing="120" />
+        <view class="row-scan-btn" catchtap="scanBarcode">扫码</view>
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">批准文号</text>
+        <input class="form-input" value="{{form.approvalcode}}" placeholder="国药准字、械备准注..."
+               data-field="approvalcode" bindinput="onInput" maxlength="64"
+               adjust-position="{{true}}" cursor-spacing="120" />
+      </view>
+
+      <!-- 生产厂家 → 企业选择 / 新增 子页面 -->
+      <view class="form-row" bindtap="chooseEnterprise">
+        <text class="form-label">生产厂家</text>
+        <view class="form-select">
+          <text class="select-value {{manufacturerName ? '' : 'is-placeholder'}}">{{manufacturerName || '点击选择或新增企业'}}</text>
+          <view class="select-arrow"></view>
+        </view>
+      </view>
+
+      <view class="form-row" bindtap="openSelect" data-field="goodscategory">
+        <text class="form-label">商品类别</text>
+        <view class="form-select">
+          <text class="select-value {{labels.goodscategory ? '' : 'is-placeholder'}}">{{labels.goodscategory || '请选择'}}</text>
+          <view class="select-arrow"></view>
+        </view>
+      </view>
+
+      <view class="form-row" bindtap="openSelect" data-field="drugtype">
+        <text class="form-label">特殊药品类别</text>
+        <view class="form-select">
+          <text class="select-value {{labels.drugtype ? '' : 'is-placeholder'}}">{{labels.drugtype || '请选择'}}</text>
+          <view class="select-arrow"></view>
+        </view>
+      </view>
+
+      <view class="form-row" bindtap="openSelect" data-field="dosageform">
+        <text class="form-label">剂型</text>
+        <view class="form-select">
+          <text class="select-value {{labels.dosageform ? '' : 'is-placeholder'}}">{{labels.dosageform || '请选择'}}</text>
+          <view class="select-arrow"></view>
+        </view>
+      </view>
+
+      <view class="form-row" bindtap="openSelect" data-field="preservation">
+        <text class="form-label">贮存方式</text>
+        <view class="form-select">
+          <text class="select-value {{labels.preservation ? '' : 'is-placeholder'}}">{{labels.preservation || '请选择'}}</text>
+          <view class="select-arrow"></view>
+        </view>
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">增值税率(%)</text>
+        <input class="form-input" value="{{form.vatrate}}" placeholder="如 17"
+               data-field="vatrate" bindinput="onInput" type="digit"
+               adjust-position="{{true}}" cursor-spacing="120" />
+      </view>
+
+      <view class="form-row" bindtap="openSelect" data-field="otctype">
+        <text class="form-label">OTC 类型</text>
+        <view class="form-select">
+          <text class="select-value {{labels.otctype ? '' : 'is-placeholder'}}">{{labels.otctype || '不设置'}}</text>
+          <view class="select-arrow"></view>
+        </view>
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">可刷医保</text>
+        <view class="form-switch-wrap">
+          <switch checked="{{form.is_medicare}}" color="#5cb85c" data-field="is_medicare" bindchange="onFormSwitch" />
+        </view>
+      </view>
+
+      <view class="form-row" wx:if="{{form.is_medicare}}">
+        <text class="form-label">医保编码</text>
+        <input class="form-input" value="{{form.medicarecode}}" placeholder="国家医保编码"
+               data-field="medicarecode" bindinput="onInput" maxlength="64"
+               adjust-position="{{true}}" cursor-spacing="120" />
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">商品有效</text>
+        <view class="form-switch-wrap">
+          <switch checked="{{form.isenable}}" color="#5cb85c" data-field="isenable" bindchange="onFormSwitch" />
+        </view>
+      </view>
+    </view>
+
+    <!-- ===== 门店属性（编辑模式 + 本店已有属性行） ===== -->
+    <view class="form-card" wx:if="{{mode === 'edit' && hasProperty}}">
+      <view class="section-title">门店属性</view>
+
+      <view class="form-row" bindtap="openSelect" data-field="allocation">
+        <text class="form-label">指定货位</text>
+        <view class="form-select">
+          <text class="select-value {{allocationName ? '' : 'is-placeholder'}}">{{allocationName || '未指定'}}</text>
+          <view class="select-arrow"></view>
+        </view>
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">安全库存</text>
+        <input class="form-input" value="{{prop.safestock}}" placeholder="为 0 时不参与采购计划"
+               data-field="safestock" bindinput="onPropInput" type="number"
+               adjust-position="{{true}}" cursor-spacing="120" />
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">打标签</text>
+        <view class="form-switch-wrap">
+          <switch checked="{{prop.printlabel}}" color="#5cb85c" data-field="printlabel" bindchange="onPropSwitch" />
+        </view>
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">本店上架</text>
+        <view class="form-switch-wrap">
+          <switch checked="{{prop.isenable}}" color="#5cb85c" data-field="isenable" bindchange="onPropSwitch" />
+        </view>
+      </view>
+    </view>
+
+    <!-- ===== 无属性行提示 ===== -->
+    <view class="tip-card" wx:if="{{mode === 'create' || !hasProperty}}">
+      <text class="tip-text">{{mode === 'create' ? '保存后可在「编辑物品信息」中设置货位、打标签、安全库存与本店上架。' : '该商品在本店还没有属性记录（首次入库 / 报溢后自动创建），暂不能设置货位与打标签。'}}</text>
+    </view>
+  </block>
+
+  <!-- 底部保存条 -->
+  <view class="footer-bar">
+    <button class="btn-save" bindtap="handleSave" loading="{{saving}}" disabled="{{saving}}">
+      {{mode === 'edit' ? '保 存' : '新增并返回'}}
+    </button>
+  </view>
+
+  <!-- ===== 底部选择弹层 ===== -->
+  <view class="sheet-mask" wx:if="{{showSelect}}" bindtap="closeSelect"></view>
+  <view class="sheet-panel" wx:if="{{showSelect}}" catchtap="preventBubble">
+    <view class="sheet-header">
+      <text class="sheet-title">{{selectTitle}}</text>
+      <text class="sheet-close" bindtap="closeSelect">✕</text>
+    </view>
+    <scroll-view class="sheet-body" scroll-y>
+      <view
+        class="sheet-option {{item.value === selectCurrent ? 'active' : ''}}"
+        wx:for="{{selectOptions}}"
+        wx:key="label"
+        bindtap="onSelectOption"
+        data-value="{{item.value}}"
+        data-label="{{item.label}}"
+      >
+        <text class="sheet-option-text">{{item.label}}</text>
+        <text class="sheet-check" wx:if="{{item.value === selectCurrent}}">✓</text>
+      </view>
+      <view class="sheet-empty" wx:if="{{selectOptions.length === 0}}">
+        <text>暂无可选项</text>
+      </view>
+    </scroll-view>
+  </view>
+</view>

@@ -247,6 +247,41 @@
   font-size: 28rpx;
 }
 
+/* ===== 快捷操作（新增物品） ===== */
+.quick-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 30rpx 16rpx;
+}
+
+.btn-new-goods {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  height: 62rpx;
+  padding: 0 26rpx;
+  border-radius: 31rpx;
+  background: linear-gradient(135deg, #67c23a, #4caf50);
+  box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.28);
+}
+
+.btn-new-goods:active {
+  opacity: 0.85;
+}
+
+.btn-new-goods-plus {
+  font-size: 30rpx;
+  color: #fff;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.btn-new-goods-text {
+  font-size: 30rpx;
+  color: #fff;
+  font-weight: 500;
+}
+
 /* ===== 搜索区域（白色卡片） ===== */
 .search-card {
   display: flex;
@@ -554,6 +589,29 @@
 
 .card-close:active {
   background: #ffe0e0;
+}
+
+/* 卡片标题右侧操作区：编辑物品 + 关闭 */
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  flex-shrink: 0;
+}
+
+.card-edit-btn {
+  height: 58rpx;
+  line-height: 58rpx;
+  padding: 0 22rpx;
+  border-radius: 29rpx;
+  background: rgba(92, 184, 92, 0.12);
+  color: #3d7a3d;
+  font-size: 25rpx;
+  font-weight: 500;
+}
+
+.card-edit-btn:active {
+  background: rgba(92, 184, 92, 0.25);
 }
 
 .goods-info-row {

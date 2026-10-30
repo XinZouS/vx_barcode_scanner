@@ -5,7 +5,10 @@
     "pages/scan/scan",
     "pages/detail/detail",
     "pages/stock-check/stock-check",
-    "pages/manual-overflow/manual-overflow"
+    "pages/manual-overflow/manual-overflow",
+    "pages/goods-edit/goods-edit",
+    "pages/enterprise-picker/enterprise-picker",
+    "pages/check-help/check-help"
   ],
   "window": {
     "backgroundColor": "#f0f9f0",

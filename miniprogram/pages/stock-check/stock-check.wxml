@@ -8,6 +8,9 @@
       </view>
 
       <view class="header-btns">
+        <!-- 盘点帮助 -->
+        <view class="btn-help-round" bindtap="goCheckHelp">?</view>
+
         <!-- 手动报溢 -->
         <button
           class="btn-overflow-small"
@@ -65,8 +68,8 @@
     </view>
   </view>
 
-  <!-- 搜索区域 -->
-  <view class="search-section card">
+  <!-- 搜索区域：仅在本轮盘点进行中显示（未开始时先点「新建统计」） -->
+  <view class="search-section card" wx:if="{{progress.is_in_progress}}">
     <view class="search-input-wrap">
       <input
         class="search-input"
@@ -97,6 +100,12 @@
     <view class="scan-toggle-btn {{continuousScan ? 'scan-toggle-btn--on' : ''}}" bindtap="toggleContinuousScan">
       <image class="refresh-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMCAzMCI+CiAgPGRlZnM+CiAgICA8bWFya2VyIGlkPSJhIiBtYXJrZXJXaWR0aD0iNCIgbWFya2VySGVpZ2h0PSI0IiByZWZYPSIyIiByZWZZPSIyIiBvcmllbnQ9ImF1dG8iPgogICAgICA8cGF0aCBkPSJNIDAgMCBMIDQgMiBMIDAgNCBaIiBmaWxsPSJ3aGl0ZSIvPgogICAgPC9tYXJrZXI+CiAgPC9kZWZzPgogIDxwYXRoIGQ9Ik0gMTYuMDUgMy4wNSBBIDEyIDEyIDAgMCAxIDE2LjA1IDI2Ljk1IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBtYXJrZXItZW5kPSJ1cmwoI2EpIi8+CiAgPHBhdGggZD0iTSAxMy45NSAyNi45NSBBIDEyIDEyIDAgMCAxIDEzLjk1IDMuMDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG1hcmtlci1lbmQ9InVybCgjYSkiLz4KPC9zdmc+"/>
     </view>
+  </view>
+
+  <!-- 未开始本轮盘点：扫码 / 查询全部禁用，先点「新建统计」 -->
+  <view class="not-started-card card" wx:if="{{!progress.is_in_progress}}">
+    <view class="not-started-title">还没有进行中的盘点</view>
+    <view class="not-started-text">点击上方「新建统计」开始本轮盘点后，才能扫码或查询物品。</view>
   </view>
 
   <!-- 指定货位（全局） -->

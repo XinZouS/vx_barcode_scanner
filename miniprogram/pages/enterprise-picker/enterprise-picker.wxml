@@ -1,0 +1,134 @@
+<!--pages/enterprise-picker/enterprise-picker.wxml-->
+<view class="page">
+
+  <!-- ===== 搜索区 ===== -->
+  <view class="search-card">
+    <view class="search-input-wrap">
+      <input class="search-input" value="{{searchKey}}" placeholder="输入 ID / 名称 / 拼音 查询企业"
+             bindinput="onSearchInput" bindconfirm="doSearch" confirm-type="search"
+             adjust-position="{{true}}" cursor-spacing="120" />
+      <view class="search-clear" wx:if="{{searchKey}}" bindtap="clearSearch">
+        <text>✕</text>
+      </view>
+    </view>
+    <view class="search-btn" bindtap="doSearch">查询</view>
+  </view>
+
+  <!-- 没找到 → 展开新增表单 -->
+  <view class="create-bar" wx:if="{{!showCreate}}" bindtap="toggleCreate">
+    <text class="create-bar-icon">＋</text>
+    <text class="create-bar-text">没找到？新增企业信息</text>
+  </view>
+
+  <!-- ===== 新增企业表单 ===== -->
+  <view class="form-card" wx:if="{{showCreate}}">
+    <view class="section-title">新增企业信息</view>
+
+    <view class="form-row">
+      <text class="form-label">单位名称 <text class="required">*</text></text>
+      <input class="form-input" value="{{form.name}}" placeholder="企业全称"
+             data-field="name" bindinput="onInput" maxlength="64"
+             adjust-position="{{true}}" cursor-spacing="120" />
+    </view>
+
+    <view class="form-row">
+      <text class="form-label">单位简称</text>
+      <input class="form-input" value="{{form.shortname}}" placeholder="最多 16 字"
+             data-field="shortname" bindinput="onInput" maxlength="16"
+             adjust-position="{{true}}" cursor-spacing="120" />
+    </view>
+
+    <view class="form-row" bindtap="openSelect" data-field="enterprisetype">
+      <text class="form-label">单位类别</text>
+      <view class="form-select">
+        <text class="select-value">{{labels.enterprisetype || '请选择'}}</text>
+        <view class="select-arrow"></view>
+      </view>
+    </view>
+
+    <view class="form-row" bindtap="openSelect" data-field="category">
+      <text class="form-label">业务分类</text>
+      <view class="form-select">
+        <text class="select-value {{labels.category ? '' : 'is-placeholder'}}">{{labels.category || '可留空'}}</text>
+        <view class="select-arrow"></view>
+      </view>
+    </view>
+
+    <view class="form-row">
+      <text class="form-label">电话</text>
+      <input class="form-input" value="{{form.phone}}" placeholder="联系电话"
+             data-field="phone" bindinput="onInput" maxlength="16"
+             adjust-position="{{true}}" cursor-spacing="120" />
+    </view>
+
+    <view class="form-row">
+      <text class="form-label">地址</text>
+      <input class="form-input" value="{{form.address}}" placeholder="企业地址"
+             data-field="address" bindinput="onInput" maxlength="128"
+             adjust-position="{{true}}" cursor-spacing="120" />
+    </view>
+
+    <view class="form-row">
+      <text class="form-label">备注</text>
+      <input class="form-input" value="{{form.note}}" placeholder="备注信息"
+             data-field="note" bindinput="onInput" maxlength="255"
+             adjust-position="{{true}}" cursor-spacing="120" />
+    </view>
+
+    <view class="create-actions">
+      <button class="btn-cancel" bindtap="closeCreate">取消</button>
+      <button class="btn-primary" bindtap="submitCreate" loading="{{saving}}" disabled="{{saving}}">保存并选用</button>
+    </view>
+  </view>
+
+  <!-- ===== 企业列表 ===== -->
+  <view class="list-wrap">
+    <view class="list-loading" wx:if="{{loading && list.length === 0}}">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">正在查询...</text>
+    </view>
+
+    <block wx:else>
+      <view class="ent-item" wx:for="{{list}}" wx:key="id" bindtap="onSelectRow" data-item="{{item}}">
+        <view class="ent-main">
+          <view class="ent-name-row">
+            <text class="ent-name">{{item.name || '--'}}</text>
+            <text class="ent-id">ID：{{item.id}}</text>
+          </view>
+          <view class="ent-meta-row">
+            <text class="ent-meta">{{item.shortname || '--'}}</text>
+            <text class="ent-type">{{item.enterprisetype_display || '--'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="list-more" wx:if="{{hasMore}}" bindtap="loadMore">
+        {{loading ? '加载中...' : '加载更多'}}
+      </view>
+
+      <view class="empty-state" wx:if="{{!loading && list.length === 0}}">
+        <text class="empty-text">未找到匹配的企业</text>
+      </view>
+    </block>
+  </view>
+
+  <!-- ===== 底部选择弹层 ===== -->
+  <view class="sheet-mask" wx:if="{{showSelect}}" bindtap="closeSelect"></view>
+  <view class="sheet-panel" wx:if="{{showSelect}}" catchtap="preventBubble">
+    <view class="sheet-header">
+      <text class="sheet-title">{{selectTitle}}</text>
+      <text class="sheet-close" bindtap="closeSelect">✕</text>
+    </view>
+    <scroll-view class="sheet-body" scroll-y>
+      <view class="sheet-option {{item.value === selectCurrent ? 'active' : ''}}"
+            wx:for="{{selectOptions}}" wx:key="label"
+            bindtap="onSelectOption" data-value="{{item.value}}" data-label="{{item.label}}">
+        <text class="sheet-option-text">{{item.label}}</text>
+        <text class="sheet-check" wx:if="{{item.value === selectCurrent}}">✓</text>
+      </view>
+      <view class="sheet-empty" wx:if="{{selectOptions.length === 0}}">
+        <text>暂无可选项</text>
+      </view>
+    </scroll-view>
+  </view>
+</view>

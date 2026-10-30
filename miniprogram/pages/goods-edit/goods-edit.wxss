@@ -1,0 +1,304 @@
+/* pages/goods-edit/goods-edit.wxss */
+
+page {
+  background-color: #e8f5e8;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 20rpx 0 220rpx;
+  box-sizing: border-box;
+}
+
+/* ===== 加载中 ===== */
+.loading-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 160rpx 0;
+  gap: 20rpx;
+}
+
+.loading-spinner {
+  width: 56rpx;
+  height: 56rpx;
+  border: 6rpx solid rgba(92, 184, 92, 0.25);
+  border-top-color: #5cb85c;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #7a8b7a;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== 卡片 ===== */
+.form-card {
+  margin: 20rpx 24rpx;
+  background: #fff;
+  border-radius: 18rpx;
+  padding: 20rpx 28rpx 10rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  position: relative;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #3d7a3d;
+  padding-left: 20rpx;
+  margin: 10rpx 0 10rpx;
+}
+
+.section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8rpx;
+  height: 30rpx;
+  border-radius: 4rpx;
+  background: #5cb85c;
+}
+
+/* ===== 表单行 ===== */
+.form-row {
+  display: flex;
+  align-items: center;
+  min-height: 100rpx;
+  border-bottom: 1rpx solid #f2f5f2;
+}
+
+.form-row:last-child {
+  border-bottom: none;
+}
+
+.form-label {
+  width: 190rpx;
+  flex-shrink: 0;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.required {
+  color: #fa5151;
+}
+
+.form-input {
+  flex: 1;
+  height: 72rpx;
+  background: #f8faf8;
+  border: 2rpx solid #e3ebe3;
+  border-radius: 10rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.form-select {
+  flex: 1;
+  height: 72rpx;
+  background: #f8faf8;
+  border: 2rpx solid #e3ebe3;
+  border-radius: 10rpx;
+  padding: 0 20rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.select-value {
+  font-size: 28rpx;
+  color: #333;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.select-value.is-placeholder {
+  color: #a8b5a8;
+}
+
+.select-arrow {
+  width: 14rpx;
+  height: 14rpx;
+  margin-left: 12rpx;
+  border-right: 3rpx solid #9aa89a;
+  border-bottom: 3rpx solid #9aa89a;
+  transform: rotate(-45deg);
+  flex-shrink: 0;
+}
+
+.form-switch-wrap {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 条形码右侧扫码按钮 */
+.row-scan-btn {
+  flex-shrink: 0;
+  margin-left: 14rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  padding: 0 24rpx;
+  border-radius: 10rpx;
+  background: rgba(92, 184, 92, 0.14);
+  color: #3d7a3d;
+  font-size: 26rpx;
+}
+
+.row-scan-btn:active {
+  background: rgba(92, 184, 92, 0.3);
+}
+
+/* ===== 提示卡片 ===== */
+.tip-card {
+  margin: 0 24rpx 20rpx;
+  padding: 22rpx 26rpx;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1rpx solid rgba(255, 193, 7, 0.35);
+  border-radius: 14rpx;
+}
+
+.tip-text {
+  font-size: 25rpx;
+  color: #a9761b;
+  line-height: 1.6;
+}
+
+/* ===== 底部保存条 ===== */
+.footer-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18rpx 30rpx calc(18rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 -2rpx 14rpx rgba(0, 0, 0, 0.06);
+  z-index: 90;
+}
+
+.btn-save {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  border-radius: 44rpx;
+  background: linear-gradient(135deg, #67c23a, #4caf50);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 500;
+  border: none;
+}
+
+.btn-save::after {
+  border: none;
+}
+
+.btn-save[disabled] {
+  opacity: 0.6;
+}
+
+/* ===== 底部选择弹层 ===== */
+.sheet-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 100;
+}
+
+.sheet-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 62vh;
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: sheet-up 0.22s ease-out;
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.sheet-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.sheet-close {
+  font-size: 32rpx;
+  color: #999;
+  padding: 0 10rpx;
+}
+
+.sheet-body {
+  flex: 1;
+  overflow: hidden;
+}
+
+.sheet-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 34rpx;
+  border-bottom: 1rpx solid #f6f6f6;
+}
+
+.sheet-option:active {
+  background: #f6faf6;
+}
+
+.sheet-option.active {
+  background: rgba(92, 184, 92, 0.1);
+}
+
+.sheet-option-text {
+  font-size: 30rpx;
+  color: #333;
+}
+
+.sheet-option.active .sheet-option-text {
+  color: #3d7a3d;
+  font-weight: 500;
+}
+
+.sheet-check {
+  font-size: 30rpx;
+  color: #5cb85c;
+  font-weight: bold;
+}
+
+.sheet-empty {
+  padding: 80rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  color: #999;
+}

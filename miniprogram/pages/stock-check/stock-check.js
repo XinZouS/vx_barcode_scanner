@@ -71,6 +71,8 @@ Page({
   },
 
   onLoad() {
+    // 本次盘点会话内已提交成功的商品 id（接口成功 = 已盘，用于列表回填时兜底）
+    this._submittedCheckedIds = new Set()
     this.fetchProgress()
     // 从 storage 恢复全局货位设置
     const saved = wx.getStorageSync('stockCheckAllocation')
@@ -88,10 +90,10 @@ Page({
   },
 
   handleScanResult(code) {
-    if (code) {
-      this.setData({ searchKey: code })
-      this.doSearch()
-    }
+    if (!code) return
+    if (!this._isChecking()) return
+    this.setData({ searchKey: code })
+    this.doSearch()
   },
 
   // ========== 统计进度相关 ==========
@@ -99,14 +101,65 @@ Page({
     try {
       const data = await request.get('/stock/checking/progress/')
       const percent = data.total > 0 ? Math.round((data.checked / data.total) * 100) : 0
-      this.setData({
+      const patch = {
         progress: data,
         progressPercent: percent,
         progressWidth: percent + '%'
-      })
+      }
+      // 本轮未开始（含刚「完成统计」）：清空查询/扫码残留，
+      // 界面上搜索区整体隐藏，必须先点「新建统计」才能操作
+      if (!data.is_in_progress) {
+        Object.assign(patch, {
+          searchKey: '',
+          searched: false,
+          searchResults: [],
+          currentItem: null,
+          quantityDisplay: '',
+          isItemExpired: false,
+          actualQty: '',
+          deltaPreview: null,
+          deltaPreviewDisplay: '',
+          deltaClass: '',
+          submitBtnText: '提交盘点结果',
+          isChecked: false,
+          showAlreadyCheckedHint: false,
+          uncheckedList: [],
+          uncheckedCount: 0
+        })
+      }
+      this.setData(patch)
     } catch (err) {
       this.showError(err)
     }
+  },
+
+  /**
+   * 是否允许扫码 / 查询：必须先「新建统计」开始本轮盘点
+   */
+  _isChecking() {
+    if (this.data.progress.is_in_progress) return true
+    wx.showToast({
+      title: '请先点击「新建统计」开始盘点',
+      icon: 'none',
+      duration: 2000
+    })
+    return false
+  },
+
+  /**
+   * 提交成功后本地即时 +1 进度（随后 fetchProgress 会用服务端数据校正）
+   */
+  _bumpProgress() {
+    const p = this.data.progress
+    const checked = (p.checked || 0) + 1
+    const unchecked = Math.max(0, (p.unchecked || 0) - 1)
+    const total = p.total || (checked + unchecked)
+    const percent = total > 0 ? Math.round((checked / total) * 100) : 0
+    this.setData({
+      progress: { ...p, checked, unchecked, total },
+      progressPercent: percent,
+      progressWidth: percent + '%'
+    })
   },
 
   async handleStartCheck(force = false) {
@@ -121,6 +174,8 @@ Page({
       this.setData({ startLoading: true })
       try {
         const data = await request.post('/stock/checking/start/')
+        // 新一轮盘点：清空「本次会话已盘」缓存，避免旧标记污染新轮次
+        if (this._submittedCheckedIds) this._submittedCheckedIds.clear()
         wx.showToast({
           title: data.detail || '统计已开始',
           icon: 'success'
@@ -153,6 +208,7 @@ Page({
 
   // ========== 扫码功能 ==========
   handleScan() {
+    if (!this._isChecking()) return
     wx.navigateTo({
       url: '/pages/scan/scan?mode=return',
       events: {
@@ -182,6 +238,15 @@ Page({
     })
   },
 
+  /**
+   * 打开盘点帮助（纯说明页）
+   */
+  goCheckHelp() {
+    wx.navigateTo({
+      url: '/pages/check-help/check-help'
+    })
+  },
+
   // ========== 搜索相关 ==========
   onSearchInput(e) {
     this.setData({ searchKey: e.detail.value })
@@ -205,7 +270,15 @@ Page({
     })
   },
 
-  async doSearch() {
+  /**
+   * 查询商品
+   * @param {Object} options
+   *        options.autoSelect  单条结果时是否自动打开详情卡（默认 true；
+   *        提交成功后的刷新应传 false，避免卡片又弹回来）
+   */
+  async doSearch(options = {}) {
+    const autoSelect = options.autoSelect !== false
+    if (!this._isChecking()) return
     const { searchKey } = this.data
     if (!searchKey.trim()) {
       wx.showToast({ title: '请输入搜索内容', icon: 'none' })
@@ -223,14 +296,17 @@ Page({
         key: searchKey
       })
 
-      if (!data || data.length === 0) {
+      // 已提交成功的商品：无论后端回包是否带 ischecked，一律显示为已盘
+      const list = this._applySubmittedFlags(data || [])
+
+      if (list.length === 0) {
         wx.showToast({ title: '未找到匹配的物品记录', icon: 'none' })
         this.setData({ searched: true, searchResults: [], currentItem: null })
-      } else if (data.length === 1) {
-        this.selectItem(data[0])
-        this.setData({ searched: true, searchResults: data })
+      } else if (list.length === 1 && autoSelect) {
+        this.setData({ searched: true, searchResults: list })
+        this.selectItem(list[0])
       } else {
-        this.setData({ searched: true, searchResults: data })
+        this.setData({ searched: true, searchResults: list })
       }
     } catch (err) {
       this.showError(err)
@@ -238,6 +314,21 @@ Page({
     } finally {
       this.setData({ searchLoading: false })
     }
+  },
+
+  /**
+   * 给列表回填「已盘」标记：
+   * 本次会话中提交成功的商品（接口 200 即视为已盘），即使后端回包里
+   * ischecked 还是 null/false，也强制显示为已盘，避免出现「刚提交完仍显示未设置」
+   */
+  _applySubmittedFlags(list) {
+    const ids = this._submittedCheckedIds
+    if (!ids || ids.size === 0 || !list.length) return list
+    return list.map(item => (ids.has(item.id) ? { ...item, ischecked: true } : item))
+  },
+
+  _isSubmitted(id) {
+    return !!(this._submittedCheckedIds && this._submittedCheckedIds.has(id))
   },
 
   selectItem(itemOrEvent) {
@@ -484,6 +575,17 @@ Page({
       const isEnabled = result.is_enable
       const sheetType = result.sheet_type  // 'loss' | 'overflow' | null
 
+      // 接口 200 = 已盘：后端会写 StockGoods.ischecked=True。
+      // 后端回包若带 ischecked 就以后端为准，否则按「已盘」处理（老版本回包没有该字段）
+      const isCheckedNow = typeof result.ischecked === 'boolean' ? result.ischecked : true
+      // 本次提交前是否处于「待盘」（只有 false 才计入 unchecked，null 属未开始盘点）
+      const wasUnchecked = currentItem.ischecked === false
+
+      // 记录本次会话已盘的商品，列表回填时兜底显示「已记录」
+      if (isCheckedNow && this._submittedCheckedIds) {
+        this._submittedCheckedIds.add(currentItem.id)
+      }
+
       wx.vibrateShort({ type: 'medium' })
       setTimeout(() => { wx.vibrateShort({ type: 'medium' }) }, 100)
 
@@ -493,7 +595,7 @@ Page({
         if (item.id === currentItem.id) {
           return {
             ...item,
-            ischecked: true,
+            ischecked: isCheckedNow,
             quantity: String(newQuantity),
             quantity_display: this.formatNum(newQuantity || 0),
             is_enable: isEnabled,
@@ -511,25 +613,19 @@ Page({
 
       this.setData({ searchResults: finalResults })
 
-      // ── 更新 currentItem（后端已更新 quantity=quantity_real） ──
-      this.setData({
-        currentItem: {
-          ...currentItem,
-          quantity: String(newQuantity),
-          is_enable: isEnabled,
-          ischecked: true,
-          allocation_id: result.allocation_id,
-          allocation_name: result.allocation_name
-        },
-        quantityDisplay: String(newQuantity),
-        actualQty: String(newQuantity),   // 提交后预填 = 更新后的库存，方便再次修改
-        isChecked: true
-      })
-
-      // 提交成功后从"未记录"列表移除该商品
+      // ── 提交成功后从"未记录"列表移除该商品，并同步计数 ──
       const updatedUnchecked = uncheckedList.filter(item => item.id !== currentItem.id)
-      if (updatedUnchecked.length !== uncheckedList.length) {
-        this.setData({ uncheckedList: updatedUnchecked })
+      const removedFromUnchecked = updatedUnchecked.length !== uncheckedList.length
+      if (removedFromUnchecked) {
+        this.setData({
+          uncheckedList: updatedUnchecked,
+          uncheckedCount: Math.max(0, (this.data.uncheckedCount || 0) - 1)
+        })
+      }
+
+      // ── 即时反馈进度（与 Vue 一致：先本地 +1，再由接口结果校正） ──
+      if (wasUnchecked && isCheckedNow && this.data.progress.is_in_progress) {
+        this._bumpProgress()
       }
 
       // ── 成功提示：基于 sheet_type / delta ──
@@ -551,9 +647,10 @@ Page({
       this.setData({ currentItem: null })
 
       // 提交成功后，用当前搜索关键词自动刷新列表（避免已报损商品仍显示在列表中）
+      // autoSelect=false：刚才提交过的商品不要又被自动打开卡片
       const remainingKey = this.data.searchKey
       if (remainingKey && remainingKey.trim()) {
-        this.doSearch()
+        this.doSearch({ autoSelect: false })
       } else {
         this.setData({ searchKey: '' })
       }
@@ -651,6 +748,14 @@ Page({
       name: this.data.specifiedAllocationName,
       autoLink: autoLinkEnabled
     })
+    wx.vibrateShort({ type: 'light' })
+    wx.showToast({
+      title: autoLinkEnabled
+        ? '已开启：提交盘点时自动写入货位'
+        : '已关闭：不会修改物品原有货位',
+      icon: 'none',
+      duration: 2500
+    })
   },
 
   // ========== 未记录列表 ==========
@@ -699,8 +804,11 @@ Page({
         quantity_gt: '0'
       })
       const rawList = (res.results) || []
-      const list = rawList.map(item => this._normalizeGoodsItem(item))
-      const count = res.count || 0
+      // 已提交成功的商品不再出现在「未记录」列表（接口成功即已盘）
+      const list = rawList
+        .map(item => this._normalizeGoodsItem(item))
+        .filter(item => !this._isSubmitted(item.id))
+      const count = Math.max(0, (res.count || 0) - (rawList.length - list.length))
       const hasMore = list.length < count
 
       this.setData({
@@ -736,9 +844,11 @@ Page({
         quantity_gt: '0'
       })
       const rawList = (res.results) || []
-      const moreItems = rawList.map(item => this._normalizeGoodsItem(item))
+      const moreItems = rawList
+        .map(item => this._normalizeGoodsItem(item))
+        .filter(item => !this._isSubmitted(item.id))
       const merged = [...this.data.uncheckedList, ...moreItems]
-      const count = res.count || 0
+      const count = Math.max(0, (res.count || 0) - (rawList.length - moreItems.length))
       const hasMore = merged.length < count
 
       this.setData({

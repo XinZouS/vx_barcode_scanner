@@ -149,6 +149,34 @@
   flex-shrink: 0;
 }
 
+/* 盘点帮助（? 圆钮）—— 尺寸对齐旁边「手动报溢」按钮高度（约 56rpx） */
+.btn-help-round {
+  width: 56rpx;
+  height: 56rpx;
+  min-width: 56rpx;
+  min-height: 56rpx;
+  max-width: 56rpx;
+  max-height: 56rpx;
+  padding: 0;
+  margin: 0;
+  border-radius: 50%;
+  border: 2rpx solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.btn-help-round:active {
+  background: rgba(255, 255, 255, 0.45);
+}
+
 /* 手动报溢按钮 */
 .btn-overflow-small {
   background: rgba(255, 255, 255, 0.25) !important;
@@ -194,6 +222,26 @@
   gap: 15rpx;
   margin-top: 20rpx;  /* 增加与上方绿色区域的间距 */
   padding: 20rpx 30rpx;
+}
+
+/* 未开始盘点时的占位说明（替代搜索区，阻止直接扫码/查询） */
+.not-started-card {
+  margin-top: 20rpx;
+  padding: 30rpx 30rpx;
+  text-align: center;
+}
+
+.not-started-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #5cb85c;
+  margin-bottom: 10rpx;
+}
+
+.not-started-text {
+  font-size: 26rpx;
+  color: #999;
+  line-height: 1.6;
 }
 
 .search-input-wrap {

@@ -5,7 +5,7 @@
     <text class="sheet-label">指定报溢单</text>
     <view class="sheet-picker">
       <text wx:if="{{selectedSheetCreatetime}}" class="sheet-picker-text">{{selectedSheetCreatetime}}</text>
-      <text wx:else class="sheet-picker-placeholder">点击选择；不选将自动关联已有或新建</text>
+      <text wx:else class="sheet-picker-placeholder">留空将自动关联已有单或新建</text>
       <view class="sheet-picker-arrow {{showSheetPicker ? 'arrow-up' : 'arrow-down'}}"></view>
     </view>
   </view>
@@ -61,6 +61,14 @@
       <view class="sheet-goods-empty" wx:elif="{{!sheetGoodsLoading}}">
         <text>暂无商品</text>
       </view>
+    </view>
+  </view>
+
+  <!-- 快捷操作：新增物品（push 整页表单） -->
+  <view class="quick-actions">
+    <view class="btn-new-goods" bindtap="goNewGoods">
+      <text class="btn-new-goods-plus">＋</text>
+      <text class="btn-new-goods-text">新增物品</text>
     </view>
   </view>
 
@@ -140,7 +148,10 @@
   <view class="goods-card {{keyboardUp ? 'keyboard-up' : ''}}" wx:if="{{selectedItem && !searchLoading}}">
     <view class="card-title-wrap">
       <view class="card-title">{{selectedItem.name || '--'}}（ID：{{selectedItem.id}}）</view>
-      <view class="card-close" bindtap="cancelEdit">✕</view>
+      <view class="card-actions">
+        <view class="card-edit-btn" catchtap="goEditGoods">编辑物品</view>
+        <view class="card-close" bindtap="cancelEdit">✕</view>
+      </view>
     </view>
 
     <view class="goods-info-row">
